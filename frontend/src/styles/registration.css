@@ -1,0 +1,58 @@
+.registration {
+    max-width: 400px;
+    margin: 50px auto;
+    padding: 20px;
+    background-color: #f9f9f9;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.registration h2 {
+    text-align: center;
+    margin-bottom: 30px;  /* Increased margin to add space between the heading and form */
+}
+
+.registration form {
+    display: flex;
+    flex-direction: column;  /* Make form elements stack vertically */
+    gap: 20px;  /* Add spacing between form elements */
+}
+
+.registration form div {
+    display: flex;
+    flex-direction: column;  /* Label and input will be stacked vertically */
+}
+
+.registration label {
+    font-weight: bold;
+    margin-bottom: 8px;  /* Space between label and input */
+}
+
+.registration input {
+    padding: 10px;
+    font-size: 16px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    margin-bottom: 10px;  /* Add space below the input box */
+    transition: border 0.3s ease;
+}
+
+.registration input:focus {
+    border-color: #61dafb;  /* Highlight border on focus */
+    outline: none;
+}
+
+.registration button {
+    padding: 12px;
+    font-size: 16px;
+    background-color: #61dafb;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+.registration button:hover {
+    background-color: #21a1f1;  /* Darker shade when button is hovered */
+}
