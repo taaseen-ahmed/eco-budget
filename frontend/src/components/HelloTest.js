@@ -11,7 +11,7 @@ const HelloTest = () => {
         axios.get('/api/hello', {
             auth: {
                 username: 'user', // Your backend username
-                password: '3af2930a-7f65-416a-b98c-653ffb2cc8e6', // Your backend password
+                password: 'ce7128a5-1eab-4297-88a5-a0891b63e326', // Your backend password
             }
         })
             .then(response => {

@@ -31,3 +31,13 @@ build/
 
 ### VS Code ###
 .vscode/
+
+# Ignore macOS .DS_Store files
+.DS_Store
+
+# Ignore JetBrains IDE configuration files
+.idea/
+
+# Optionally, specify particular files to ignore within .idea if you don't want to ignore the entire folder
+.idea/dataSources.local.xml
+.idea/workspace.xml

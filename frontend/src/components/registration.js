@@ -1,16 +1,18 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';  // Import useNavigate for redirection
-import '../styles/registration.css';  // Correct path to the Home.css file from Home.js
-
+import { useNavigate } from 'react-router-dom';
+import axios from 'axios';
+import '../styles/registration.css';
 
 const Registration = () => {
     const [formData, setFormData] = useState({
-        username: '',
+        firstName: '',
+        lastName: '',
         email: '',
         password: ''
     });
 
-    const navigate = useNavigate();  // Hook for navigation
+    const [error, setError] = useState(null);
+    const navigate = useNavigate();
 
     const handleChange = (e) => {
         const { name, value } = e.target;
@@ -20,28 +22,54 @@ const Registration = () => {
         });
     };
 
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
-        // For now, just log the data and redirect back to Home
-        console.log('User registered:', formData);
-        navigate('/');  // Redirect back to the Home page after form submission
+
+        try {
+            const response = await axios.post('http://localhost:8080/api/public/auth/register', formData);
+
+            console.log('Registration successful:', response.data);
+
+            const { token } = response.data;
+            localStorage.setItem('jwtToken', token);
+
+            navigate('/');
+        } catch (err) {
+            console.error('Registration error:', err.response ? err.response.data : err.message);
+            setError('Registration failed. Please try again.');
+        }
     };
 
     return (
         <div className="registration">
             <h2>Register</h2>
             <form onSubmit={handleSubmit}>
+                {error && <p className="error">{error}</p>}
+
                 <div>
-                    <label htmlFor="username">Username</label>
+                    <label htmlFor="firstName">First Name</label>
                     <input
                         type="text"
-                        id="username"
-                        name="username"
-                        value={formData.username}
+                        id="firstName"
+                        name="firstName"
+                        value={formData.firstName}
                         onChange={handleChange}
                         required
                     />
                 </div>
+
+                <div>
+                    <label htmlFor="lastName">Last Name</label>
+                    <input
+                        type="text"
+                        id="lastName"
+                        name="lastName"
+                        value={formData.lastName}
+                        onChange={handleChange}
+                        required
+                    />
+                </div>
+
                 <div>
                     <label htmlFor="email">Email</label>
                     <input
@@ -53,6 +81,7 @@ const Registration = () => {
                         required
                     />
                 </div>
+
                 <div>
                     <label htmlFor="password">Password</label>
                     <input
@@ -64,6 +93,7 @@ const Registration = () => {
                         required
                     />
                 </div>
+
                 <button type="submit">Register</button>
             </form>
         </div>
