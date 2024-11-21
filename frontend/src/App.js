@@ -1,9 +1,9 @@
 import React from 'react';
-import { Routes, Route, BrowserRouter as Router } from 'react-router-dom';
+import {Routes, Route, BrowserRouter as Router, Link} from 'react-router-dom';
 import Home from './components/Home';  // Import Home component
-import HelloTest from './components/HelloTest';  // Import HelloTest component
-import Registration from './components/registration';
+import Registration from './components/Registration';
 import Login from './components/Login';
+import './styles/App.css';
 
 function App() {
     return (
@@ -11,18 +11,22 @@ function App() {
             <div className="App">
                 <header className="App-header">
                     <h1>Eco-Budget</h1>
+                    <nav className="navbar">
+                        <Link to="/" className="nav-link">Home</Link>
+                        <Link to="/register" className="nav-link">Register</Link>
+                        <Link to="/login" className="nav-link">Log In</Link>
+                    </nav>
                 </header>
+
                 {/* Define Routes */}
                 <Routes>
                     <Route path="/" element={<Home />} />  {/* Homepage route */}
-                    <Route path="/hello-test" element={<HelloTest />} />  {/* API Test route */}
                     <Route path="/register" element={<Registration />} />  {/* Registration route */}
-                    <Route path="/login" element={<Login />} />
+                    <Route path="/login" element={<Login />} />  {/* Login route */}
                 </Routes>
             </div>
         </Router>
     );
 }
-
 
 export default App;
