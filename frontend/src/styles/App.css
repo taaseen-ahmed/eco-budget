@@ -9,14 +9,52 @@ body {
 /* Header styles */
 .App-header {
   color: white;
-  text-align: center;
   padding: 1rem;
   box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  position: relative;
 }
 
 .App-header h1 {
   font-size: 3rem;
   margin: 0;
+  text-align: center;
+}
+
+.logo-link {
+  color: white;
+  text-decoration: none;
+}
+
+.title-button {
+  background: none;
+  border: none;
+  color: inherit;
+  font-size: 2rem;
+  font-weight: bold;
+  cursor: pointer;
+  text-decoration: none;
+}
+
+/* Log out button in the header */
+.logout-button {
+  background-color: #e60000;
+  border: none;
+  color: white;
+  padding: 10px 20px;
+  font-size: 1rem;
+  cursor: pointer;
+  border-radius: 5px;
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  transition: background-color 0.3s ease;
+}
+
+.logout-button:hover {
+  background-color: #ff4d4d;
 }
 
 /* Navbar styles */
@@ -41,4 +79,16 @@ body {
 
 .nav-link:hover {
   background: #2193b0;
+}
+
+/* Responsive styling */
+@media (max-width: 768px) {
+  .navbar {
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .nav-link {
+    margin: 5px 0;
+  }
 }

@@ -28,14 +28,10 @@ const Registration = () => {
         try {
             const response = await axios.post('http://localhost:8080/api/public/auth/register', formData);
 
-            console.log('Registration successful:', response.data);
-
             const { token } = response.data;
             localStorage.setItem('jwtToken', token);
-
-            navigate('/');
+            navigate('/dashboard');
         } catch (err) {
-            console.error('Registration error:', err.response ? err.response.data : err.message);
             setError('Registration failed. Please try again.');
         }
     };

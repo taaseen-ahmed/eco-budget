@@ -1,31 +1,74 @@
-import React from 'react';
-import {Routes, Route, BrowserRouter as Router, Link} from 'react-router-dom';
-import Home from './Home/Home';  // Import Home component
+import React, { useState, useEffect } from 'react';
+import { Routes, Route, BrowserRouter as Router, Link, useNavigate } from 'react-router-dom';
+import Home from './Home/Home';
 import Registration from './Registration/Registration';
 import Login from './Login/Login';
+import Dashboard from './Dashboard/Dashboard';
+import PrivateRoute from './PrivateRoute';
 import './styles/App.css';
 
 function App() {
+    const [isAuthenticated, setIsAuthenticated] = useState(false);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        const token = localStorage.getItem('jwtToken');
+        if (token) {
+            setIsAuthenticated(true);
+        }
+        setLoading(false);
+    }, []);
+
+    if (loading) {
+        return <div>Loading...</div>;
+    }
+
     return (
         <Router>
-            <div className="App">
-                <header className="App-header">
-                    <h1>Eco-Budget</h1>
-                    <nav className="navbar">
-                        <Link to="/" className="nav-link">Home</Link>
-                        <Link to="/register" className="nav-link">Register</Link>
-                        <Link to="/login" className="nav-link">Log In</Link>
-                    </nav>
-                </header>
-
-                {/* Define Routes */}
-                <Routes>
-                    <Route path="/" element={<Home />} />  {/* Homepage route */}
-                    <Route path="/register" element={<Registration />} />  {/* Registration route */}
-                    <Route path="/login" element={<Login />} />  {/* Login route */}
-                </Routes>
-            </div>
+            <AppContent isAuthenticated={isAuthenticated} setIsAuthenticated={setIsAuthenticated} />
         </Router>
+    );
+}
+
+function AppContent({ isAuthenticated, setIsAuthenticated }) {
+    const navigate = useNavigate();
+
+    const handleLogout = () => {
+        localStorage.removeItem('jwtToken');
+        setIsAuthenticated(false);
+        navigate('/');
+    };
+
+    return (
+        <div className="App">
+            <header className="App-header">
+                <div className="logo">
+                    <Link to={isAuthenticated ? '/dashboard' : '/'} className="logo-link">
+                        <h1>Eco-Budget</h1>
+                    </Link>
+                </div>
+                {isAuthenticated && (
+                    <button className="logout-button" onClick={handleLogout}>
+                        Log Out
+                    </button>
+                )}
+                {isAuthenticated && (
+                    <nav className="navbar">
+                        <Link to="/spending" className="nav-link">Spending</Link>
+                    </nav>
+                )}
+            </header>
+
+            <Routes>
+                <Route path="/" element={<Home />} />
+                <Route path="/register" element={<Registration />} />
+                <Route path="/login" element={<Login setIsAuthenticated={setIsAuthenticated} />} />
+                <Route
+                    path="/dashboard"
+                    element={<PrivateRoute element={<Dashboard />} isAuthenticated={isAuthenticated} />}
+                />
+            </Routes>
+        </div>
     );
 }
 

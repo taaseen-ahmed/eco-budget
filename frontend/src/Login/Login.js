@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import './Login.css';
 
-const Login = () => {
+const Login = ({ setIsAuthenticated }) => {
     const [formData, setFormData] = useState({
         username: '',
         password: ''
@@ -36,13 +36,14 @@ const Login = () => {
 
             const { token } = response.data;
             localStorage.setItem(TOKEN_KEY, token);
-            navigate('/'); // Navigate to the home page or dashboard
+            setIsAuthenticated(true);
+            setError(null);
+            navigate('/dashboard');
         } catch (err) {
-            // Check if the error is a 403 (Forbidden) - invalid credentials
             if (err.response && err.response.status === 403) {
-                setError('Invalid credentials, please try again.');
+                setError('Invalid credentials, Please try again.');
             } else {
-                setError(err.response ? err.response.data.message : 'Login failed. Please try again.');
+                setError('An error occurred. Please try again later.');
             }
             console.error('Login error:', err);
         }
