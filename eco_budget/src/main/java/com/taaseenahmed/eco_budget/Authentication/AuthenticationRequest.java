@@ -1,4 +1,4 @@
-package com.taaseenahmed.eco_budget.authentication;
+package com.taaseenahmed.eco_budget.Authentication;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;

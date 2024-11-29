@@ -1,4 +1,4 @@
-package com.taaseenahmed.eco_budget.config;
+package com.taaseenahmed.eco_budget.Config;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;

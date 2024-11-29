@@ -1,9 +1,9 @@
-package com.taaseenahmed.eco_budget.authentication;
+package com.taaseenahmed.eco_budget.Authentication;
 
-import com.taaseenahmed.eco_budget.appUser.AppUserRepository;
-import com.taaseenahmed.eco_budget.appUser.Role;
-import com.taaseenahmed.eco_budget.appUser.AppUser;
-import com.taaseenahmed.eco_budget.config.JwtService;
+import com.taaseenahmed.eco_budget.AppUser.AppUserRepository;
+import com.taaseenahmed.eco_budget.AppUser.Role;
+import com.taaseenahmed.eco_budget.AppUser.AppUser;
+import com.taaseenahmed.eco_budget.Config.JwtService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;

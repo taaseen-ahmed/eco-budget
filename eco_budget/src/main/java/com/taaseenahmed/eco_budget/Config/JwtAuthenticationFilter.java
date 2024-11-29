@@ -1,4 +1,4 @@
-package com.taaseenahmed.eco_budget.config;
+package com.taaseenahmed.eco_budget.Config;
 
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;

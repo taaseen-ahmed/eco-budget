@@ -1,4 +1,4 @@
-package com.taaseenahmed.eco_budget.appUser;
+package com.taaseenahmed.eco_budget.AppUser;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import java.util.Optional;

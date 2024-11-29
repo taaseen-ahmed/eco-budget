@@ -1,4 +1,4 @@
-package com.taaseenahmed.eco_budget.appUser;
+package com.taaseenahmed.eco_budget.AppUser;
 
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -12,8 +12,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 import java.util.Collection;
 import java.util.List;
 
-// A JPA entity representing an application user with user-related attributes.
-// Implements the UserDetails interface to integrate with Spring Security.
+// Represents a user in the application and integrates with Spring Security for authentication/authorization.
 @Data
 @Builder
 @NoArgsConstructor
@@ -22,45 +21,48 @@ import java.util.List;
 public class AppUser implements UserDetails {
 
     @Id
-    @GeneratedValue // Auto-generate the primary key value
+    @GeneratedValue // Automatically generates unique primary keys for each user.
     private Integer id;
 
     private String firstName;
     private String lastName;
-    private String email; // Used as the username for authentication
+    private String email; // Acts as the username for Spring Security authentication.
     private String password;
 
-    @Enumerated(EnumType.STRING) // Store role as a string (e.g., "ADMIN" or "USER")
+    @Enumerated(EnumType.STRING) // Stores the role (e.g., "USER", "ADMIN") as a string in the database.
     private Role role;
 
-    // Provide the user's authorities (permissions) based on their role
+    // Returns the authorities granted to the user, based on their role.
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        return List.of(new SimpleGrantedAuthority(role.name()));
+        return List.of(new SimpleGrantedAuthority(role != null ? role.name() : "ROLE_USER"));
     }
 
-    // Define email as the username used for authentication
+    // Overrides to specify that email is used as the username.
     @Override
     public String getUsername() {
         return email;
     }
 
-    // Indicate that the account is active and unrestricted (no additional restrictions applied)
+    // Indicates that the account is valid and unrestricted (non-expired).
     @Override
     public boolean isAccountNonExpired() {
         return true;
     }
 
+    // Indicates that the account is not locked.
     @Override
     public boolean isAccountNonLocked() {
         return true;
     }
 
+    // Indicates that the credentials (password) are valid and not expired.
     @Override
     public boolean isCredentialsNonExpired() {
         return true;
     }
 
+    // Indicates whether the account is enabled (active and usable).
     @Override
     public boolean isEnabled() {
         return true;

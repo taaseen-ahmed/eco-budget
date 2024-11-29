@@ -1,6 +1,6 @@
-package com.taaseenahmed.eco_budget.authentication;
+package com.taaseenahmed.eco_budget.Authentication;
 
-import com.taaseenahmed.eco_budget.appUser.Role;
+import com.taaseenahmed.eco_budget.AppUser.Role;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
