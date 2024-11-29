@@ -24,10 +24,11 @@ public class TransactionController {
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
-    // Endpoint to fetch transactions for a specific user by their user ID.
-    @GetMapping("/user/{userId}")
-    public ResponseEntity<List<TransactionDTO>> getTransactionsByUserId(@PathVariable Integer userId) {
-        List<TransactionDTO> transactionDTOList = transactionService.getTransactionsByUserId(userId);
+    // Fetch transactions for the authenticated user using their email (from the JWT token or session)
+    @GetMapping("/user")
+    public ResponseEntity<List<TransactionDTO>> getTransactionsByAuthenticatedUser(Principal principal) {
+        // principal.getName() gives the logged-in user's email
+        List<TransactionDTO> transactionDTOList = transactionService.getTransactionsByUserEmail(principal.getName());
         return ResponseEntity.ok(transactionDTOList);
     }
 

@@ -7,7 +7,6 @@ import com.taaseenahmed.eco_budget.Config.ResourceNotFoundException;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -39,6 +38,19 @@ public class TransactionService {
     public List<TransactionDTO> getAllTransactions() {
         return transactionRepository.findAll().stream()
                 .map(this::convertToDTO) // Convert each transaction to a DTO
+                .collect(Collectors.toList());
+    }
+
+    // Get transactions for a specific user using email
+    public List<TransactionDTO> getTransactionsByUserEmail(String userEmail) {
+        // Fetch user by email
+        AppUser user = appUserRepository.findByEmail(userEmail)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        // Retrieve the user's transactions
+        List<Transaction> transactions = transactionRepository.findByAppUserId(user.getId());
+        return transactions.stream()
+                .map(this::convertToDTO)
                 .collect(Collectors.toList());
     }
 

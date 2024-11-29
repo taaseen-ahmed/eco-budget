@@ -4,6 +4,7 @@ import Home from './Home/Home';
 import Registration from './Registration/Registration';
 import Login from './Login/Login';
 import Dashboard from './Dashboard/Dashboard';
+import Spending from './Spending/Spending'; // Import Spending page
 import PrivateRoute from './PrivateRoute';
 import './styles/App.css';
 
@@ -66,6 +67,10 @@ function AppContent({ isAuthenticated, setIsAuthenticated }) {
                 <Route
                     path="/dashboard"
                     element={<PrivateRoute element={<Dashboard />} isAuthenticated={isAuthenticated} />}
+                />
+                <Route
+                    path="/spending"
+                    element={<PrivateRoute element={<Spending />} isAuthenticated={isAuthenticated} />} // Protected Spending route
                 />
             </Routes>
         </div>
