@@ -1,8 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React, {useState, useEffect, useCallback} from 'react';
 import axios from 'axios';
 import './Spending.css';
 
 const Spending = () => {
+    const [categories, setCategories] = useState([]);
+    const [newCategory, setNewCategory] = useState('');
     const [transactions, setTransactions] = useState([]);
     const [newTransaction, setNewTransaction] = useState({
         amount: '',
@@ -11,36 +13,58 @@ const Spending = () => {
         date: '',
         description: ''
     });
+    const transactionTypes = ["Income", "Expense"];
+
+    const fetchData = useCallback(async () => {
+        try {
+            await Promise.all([fetchTransactions(), fetchCategories()]);
+        } catch (error) {
+            console.error('Error loading data:', error);
+        }
+    }, []);
 
     useEffect(() => {
-        fetchTransactions();
-    }, []);
+        fetchData();
+    }, [fetchData]);
 
     const fetchTransactions = async () => {
         try {
             const token = localStorage.getItem('jwtToken');
-            // Fetch the authenticated user's transactions
             const response = await axios.get('/api/transaction/user', {
-                headers: {
-                    'Authorization': `Bearer ${token}`
-                }
+                headers: { Authorization: `Bearer ${token}` },
             });
-            setTransactions(response.data); // Set transactions to state
+            setTransactions(response.data);
         } catch (error) {
             console.error('Error fetching transactions:', error);
+            alert('Failed to fetch transactions. Please try again.');
+        }
+    };
+
+    const fetchCategories = async () => {
+        try {
+            const token = localStorage.getItem('jwtToken');
+            const response = await axios.get('/api/categories', {
+                headers: { Authorization: `Bearer ${token}` },
+            });
+
+            // If the backend returns objects with a 'name' property, you need to extract it
+            setCategories(response.data.map(cat => cat.name));  // Extract category names if they're objects
+        } catch (error) {
+            console.error('Error fetching categories:', error);
+            alert('Failed to fetch categories. Please try again.');
         }
     };
 
     const handleAddTransaction = async () => {
         try {
+            if (!newTransaction.amount || !newTransaction.category || !newTransaction.type || !newTransaction.date) {
+                alert('Please fill in all required fields.');
+                return;
+            }
             const token = localStorage.getItem('jwtToken');
-            // Send the new transaction with the appropriate details
             const response = await axios.post('/api/transaction', newTransaction, {
-                headers: {
-                    'Authorization': `Bearer ${token}`
-                }
+                headers: { Authorization: `Bearer ${token}` },
             });
-            // Add the newly created transaction to the list
             setTransactions([...transactions, response.data]);
             setNewTransaction({
                 amount: '',
@@ -51,6 +75,29 @@ const Spending = () => {
             });
         } catch (error) {
             console.error('Error adding transaction:', error);
+            alert('Failed to add transaction. Please try again.');
+        }
+    };
+
+    const handleAddCategory = async () => {
+        if (!newCategory.trim()) {
+            alert('Category name cannot be empty.');
+            return;
+        }
+        if (categories.some((cat) => cat.toLowerCase() === newCategory.toLowerCase())) {
+            alert('This category already exists.');
+            return;
+        }
+        try {
+            const token = localStorage.getItem('jwtToken');
+            const response = await axios.post('/api/categories', { name: newCategory }, {
+                headers: { Authorization: `Bearer ${token}` },
+            });
+            setCategories([...categories, response.data.name]); // Ensure you add the category name directly
+            setNewCategory('');
+        } catch (error) {
+            console.error('Error adding category:', error);
+            alert('Failed to add category. Please try again.');
         }
     };
 
@@ -64,6 +111,7 @@ const Spending = () => {
             <h2>Spending</h2>
             <h2>Add a Transaction below</h2>
 
+            {/* Form to Add a Transaction */}
             <div className="transaction-form">
                 <input
                     type="number"
@@ -73,22 +121,33 @@ const Spending = () => {
                     placeholder="Amount"
                     className="input-field"
                 />
-                <input
-                    type="text"
+                {/* Dropdown for Category Selection */}
+                <select
                     name="category"
                     value={newTransaction.category}
                     onChange={handleChange}
-                    placeholder="Category"
                     className="input-field"
-                />
-                <input
-                    type="text"
+                >
+                    <option value="" disabled>Select a category</option>
+                    {categories.map((category, index) => (
+                        <option key={index} value={category}>
+                            {category} {/* Display category name */}
+                        </option>
+                    ))}
+                </select>
+                <select
                     name="type"
                     value={newTransaction.type}
                     onChange={handleChange}
-                    placeholder="Type"
                     className="input-field"
-                />
+                >
+                    <option value="" disabled>Select a type</option>
+                    {transactionTypes.map((type, index) => (
+                        <option key={index} value={type}>
+                            {type}
+                        </option>
+                    ))}
+                </select>
                 <input
                     type="datetime-local"
                     name="date"
@@ -109,6 +168,22 @@ const Spending = () => {
                 </button>
             </div>
 
+            {/* Form to Add a New Category */}
+            <div className="category-form">
+                <h3>Add a New Category</h3>
+                <input
+                    type="text"
+                    value={newCategory}
+                    onChange={(e) => setNewCategory(e.target.value)}
+                    placeholder="New Category Name"
+                    className="input-field"
+                />
+                <button onClick={handleAddCategory} className="submit-button">
+                    Add Category
+                </button>
+            </div>
+
+            {/* Display Transactions */}
             <div className="transaction-list">
                 <h3>Your Transactions</h3>
                 <ul>
