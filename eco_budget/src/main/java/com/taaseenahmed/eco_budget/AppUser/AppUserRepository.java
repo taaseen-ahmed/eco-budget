@@ -5,7 +5,7 @@ import java.util.Optional;
 
 // Repository interface for AppUser entities to handle database operations.
 // Extends JpaRepository to inherit basic CRUD and pagination functionality.
-public interface AppUserRepository extends JpaRepository<AppUser, Integer> {
+public interface AppUserRepository extends JpaRepository<AppUser, Long> {
 
     // Custom query method to find a user by their email.
     // Returns an Optional to handle cases where the user might not exist.

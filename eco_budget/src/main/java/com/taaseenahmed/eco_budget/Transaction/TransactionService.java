@@ -60,7 +60,7 @@ public class TransactionService {
         AppUserDTO appUserDTO = buildAppUserDTO(appUser);
 
         return new TransactionDTO(
-                transaction.getId().intValue(),
+                transaction.getId(),
                 appUserDTO,
                 transaction.getAmount(),
                 transaction.getCategory(),
@@ -85,14 +85,6 @@ public class TransactionService {
                 .email(user.getEmail())
                 .role(user.getRole().name())
                 .build();
-    }
-
-    // Get transactions for a specific user
-    public List<TransactionDTO> getTransactionsByUserId(Integer userId) {
-        List<Transaction> transactions = transactionRepository.findByAppUserId(userId);
-        return transactions.stream()
-                .map(this::convertToDTO)
-                .collect(Collectors.toList());
     }
 
     // Update an existing transaction
@@ -131,7 +123,7 @@ public class TransactionService {
     // Helper method to build TransactionDTO
     private TransactionDTO buildTransactionDTO(Transaction transaction, AppUserDTO appUserDTO) {
         return TransactionDTO.builder()
-                .id(transaction.getId().intValue())
+                .id(transaction.getId())
                 .appUser(appUserDTO)
                 .amount(transaction.getAmount())
                 .category(transaction.getCategory())

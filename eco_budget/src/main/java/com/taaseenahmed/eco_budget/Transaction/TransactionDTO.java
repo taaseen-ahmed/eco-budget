@@ -11,7 +11,7 @@ import java.time.LocalDateTime;
 @Data
 @Builder
 public class TransactionDTO {
-    private Integer id;
+    private Long id;
     private AppUserDTO appUser;
     private BigDecimal amount;
     private String category;

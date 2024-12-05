@@ -10,5 +10,5 @@ import java.util.List;
 public interface TransactionRepository extends JpaRepository<Transaction, Long> {
 
     // Custom query to find transactions by a user's ID.
-    List<Transaction> findByAppUserId(Integer appUser_id);
+    List<Transaction> findByAppUserId(Long appUser_id);
 }

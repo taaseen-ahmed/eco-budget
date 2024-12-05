@@ -7,5 +7,5 @@ import java.util.List;
 
 @Repository
 public interface CategoryRepository extends JpaRepository<Category, Long> {
-    List<Category> findByUserIdOrUserIsNull(Integer userId); // Fetch predefined and user-specific categories
+    List<Category> findByUserIdOrUserIsNull(Long userId); // Fetch predefined and user-specific categories
 }

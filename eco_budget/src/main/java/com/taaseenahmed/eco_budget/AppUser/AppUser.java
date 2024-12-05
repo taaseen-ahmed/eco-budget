@@ -22,7 +22,7 @@ public class AppUser implements UserDetails {
 
     @Id
     @GeneratedValue // Automatically generates unique primary keys for each user.
-    private Integer id;
+    private Long id;
 
     private String firstName;
     private String lastName;
