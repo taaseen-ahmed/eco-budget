@@ -3,6 +3,9 @@ package com.taaseenahmed.eco_budget.Transaction;
 import com.taaseenahmed.eco_budget.AppUser.AppUser;
 import com.taaseenahmed.eco_budget.AppUser.AppUserDTO;
 import com.taaseenahmed.eco_budget.AppUser.AppUserRepository;
+import com.taaseenahmed.eco_budget.Category.Category;
+import com.taaseenahmed.eco_budget.Category.CategoryDTO;
+import com.taaseenahmed.eco_budget.Category.CategoryRepository;
 import com.taaseenahmed.eco_budget.Config.ResourceNotFoundException;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -17,6 +20,7 @@ public class TransactionService {
 
     private final TransactionRepository transactionRepository;
     private final AppUserRepository appUserRepository;
+    private final CategoryRepository categoryRepository;
 
     // Create a new transaction for the authenticated user
     public TransactionDTO createTransaction(Transaction transaction, String userEmail) {
@@ -27,11 +31,14 @@ public class TransactionService {
         // Associate the user with the transaction
         transaction.setAppUser(user);
 
-        // Save the transaction and create a DTO for response
-        Transaction savedTransaction = transactionRepository.save(transaction);
-        AppUserDTO appUserDTO = buildAppUserDTO(user);
+        // Fetch the Category entity and associate it with the transaction
+        Long categoryId = transaction.getCategory().getId(); // Assuming the ID is provided in the request
+        Category category = categoryRepository.findById(categoryId)
+                .orElseThrow(() -> new RuntimeException("Category not found"));
+        transaction.setCategory(category);
 
-        return buildTransactionDTO(savedTransaction, appUserDTO);
+        Transaction savedTransaction = transactionRepository.save(transaction);
+        return buildTransactionDTO(savedTransaction, buildAppUserDTO(user));
     }
 
     // Retrieve all transactions and convert to DTOs
@@ -55,19 +62,24 @@ public class TransactionService {
     }
 
     // Convert a transaction entity to a DTO
-    private TransactionDTO convertToDTO(Transaction transaction) {
+    public TransactionDTO convertToDTO(Transaction transaction) {
         AppUser appUser = transaction.getAppUser();
         AppUserDTO appUserDTO = buildAppUserDTO(appUser);
 
-        return new TransactionDTO(
-                transaction.getId(),
-                appUserDTO,
-                transaction.getAmount(),
-                transaction.getCategory(),
-                transaction.getType(),
-                transaction.getDate(),
-                transaction.getDescription()
-        );
+        // Convert Category to CategoryDTO
+        CategoryDTO categoryDTO = transaction.getCategory() != null
+                ? new CategoryDTO(transaction.getCategory().getId(), transaction.getCategory().getName())
+                : null;
+
+        return TransactionDTO.builder()
+                .id(transaction.getId())
+                .appUser(appUserDTO)
+                .amount(transaction.getAmount())
+                .category(categoryDTO)
+                .type(transaction.getType())
+                .date(transaction.getDate())
+                .description(transaction.getDescription())
+                .build();
     }
 
     // Get a transaction by its ID
@@ -88,16 +100,28 @@ public class TransactionService {
     }
 
     // Update an existing transaction
-    public TransactionDTO updateTransaction(Long id, Transaction transaction) {
-        // Ensure the transaction exists
+    public TransactionDTO updateTransaction(Long id, TransactionDTO transactionDTO) {
+        // Fetch the existing transaction
         Transaction existingTransaction = transactionRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Transaction not found with id: " + id));
 
-        // Preserve the original user's relationship and save the updated transaction
-        transaction.setId(existingTransaction.getId());
-        transaction.setAppUser(existingTransaction.getAppUser());
-        Transaction updatedTransaction = transactionRepository.save(transaction);
+        // Update the fields of the existing transaction
+        existingTransaction.setAmount(transactionDTO.getAmount());
+        existingTransaction.setType(transactionDTO.getType());
+        existingTransaction.setDate(transactionDTO.getDate());
+        existingTransaction.setDescription(transactionDTO.getDescription());
 
+        // Update the category if provided
+        if (transactionDTO.getCategory() != null && transactionDTO.getCategory().getId() != null) {
+            Category category = categoryRepository.findById(transactionDTO.getCategory().getId())
+                    .orElseThrow(() -> new RuntimeException("Category not found with ID " + transactionDTO.getCategory().getId()));
+            existingTransaction.setCategory(category);
+        }
+
+        // Save the updated transaction
+        Transaction updatedTransaction = transactionRepository.save(existingTransaction);
+
+        // Convert to DTO and return
         return convertToDTO(updatedTransaction);
     }
 
@@ -122,14 +146,23 @@ public class TransactionService {
 
     // Helper method to build TransactionDTO
     private TransactionDTO buildTransactionDTO(Transaction transaction, AppUserDTO appUserDTO) {
+        // Convert Category to CategoryDTO
+        CategoryDTO categoryDTO = transaction.getCategory() != null
+                ? new CategoryDTO(transaction.getCategory().getId(), transaction.getCategory().getName())
+                : null;
+
         return TransactionDTO.builder()
                 .id(transaction.getId())
                 .appUser(appUserDTO)
                 .amount(transaction.getAmount())
-                .category(transaction.getCategory())
+                .category(categoryDTO) // Pass the CategoryDTO here
                 .type(transaction.getType())
                 .date(transaction.getDate())
                 .description(transaction.getDescription())
                 .build();
+    }
+
+    public Optional<Category> getCategoryById(Long id) {
+        return categoryRepository.findById(id);
     }
 }

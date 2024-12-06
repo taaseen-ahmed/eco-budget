@@ -22,9 +22,9 @@ public class CategoryService {
 
         List<Category> categories = categoryRepository.findByUserIdOrUserIsNull(user.getId());
 
-        // Convert List<Category> to List<CategoryDTO>
+        // Map Category to CategoryDTO (passing both id and name)
         return categories.stream()
-                .map(category -> new CategoryDTO(category.getName()))
+                .map(category -> new CategoryDTO(category.getId(), category.getName())) // Pass both id and name
                 .collect(Collectors.toList());
     }
 
@@ -37,9 +37,10 @@ public class CategoryService {
         category.setName(categoryName);
         category.setUser(user);
 
+        // Save the category and get the saved entity
         Category savedCategory = categoryRepository.save(category);
 
-        // Convert the saved Category entity to CategoryDTO
-        return new CategoryDTO(savedCategory.getName());
+        // Convert the saved Category entity to CategoryDTO with both id and name
+        return new CategoryDTO(savedCategory.getId(), savedCategory.getName());
     }
 }

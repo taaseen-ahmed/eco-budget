@@ -1,6 +1,7 @@
 package com.taaseenahmed.eco_budget.Transaction;
 
 import com.taaseenahmed.eco_budget.AppUser.AppUserDTO;
+import com.taaseenahmed.eco_budget.Category.CategoryDTO;
 import lombok.Builder;
 import lombok.Data;
 
@@ -14,7 +15,7 @@ public class TransactionDTO {
     private Long id;
     private AppUserDTO appUser;
     private BigDecimal amount;
-    private String category;
+    private CategoryDTO category; // Updated to include a CategoryDTO
     private String type;
     private LocalDateTime date;
     private String description;

@@ -46,9 +46,7 @@ const Spending = () => {
             const response = await axios.get('/api/categories', {
                 headers: { Authorization: `Bearer ${token}` },
             });
-
-            // If the backend returns objects with a 'name' property, you need to extract it
-            setCategories(response.data.map(cat => cat.name));  // Extract category names if they're objects
+            setCategories(response.data); // Store full CategoryDTO objects
         } catch (error) {
             console.error('Error fetching categories:', error);
             alert('Failed to fetch categories. Please try again.');
@@ -61,11 +59,26 @@ const Spending = () => {
                 alert('Please fill in all required fields.');
                 return;
             }
+
+            if (!newTransaction.category.id) {
+                alert('Please select a valid category.');
+                return;
+            }
+
             const token = localStorage.getItem('jwtToken');
-            const response = await axios.post('/api/transaction', newTransaction, {
+            const transactionToSend = {
+                ...newTransaction,
+                category: { id: newTransaction.category.id }, // Ensure category is an object with an id
+            };
+
+            const response = await axios.post('/api/transaction', transactionToSend, {
                 headers: { Authorization: `Bearer ${token}` },
             });
+
+            // Add the newly created transaction to the list
             setTransactions([...transactions, response.data]);
+
+            // Reset the form
             setNewTransaction({
                 amount: '',
                 category: '',
@@ -84,7 +97,7 @@ const Spending = () => {
             alert('Category name cannot be empty.');
             return;
         }
-        if (categories.some((cat) => cat.toLowerCase() === newCategory.toLowerCase())) {
+        if (categories.some((cat) => cat.name.toLowerCase() === newCategory.toLowerCase())) {
             alert('This category already exists.');
             return;
         }
@@ -93,7 +106,7 @@ const Spending = () => {
             const response = await axios.post('/api/categories', { name: newCategory }, {
                 headers: { Authorization: `Bearer ${token}` },
             });
-            setCategories([...categories, response.data.name]); // Ensure you add the category name directly
+            setCategories([...categories, response.data]); // Ensure you add the full category object
             setNewCategory('');
         } catch (error) {
             console.error('Error adding category:', error);
@@ -124,14 +137,17 @@ const Spending = () => {
                 {/* Dropdown for Category Selection */}
                 <select
                     name="category"
-                    value={newTransaction.category}
-                    onChange={handleChange}
+                    value={newTransaction.category ? newTransaction.category.id : ''}
+                    onChange={(e) => {
+                        const selectedCategory = categories.find(cat => cat.id === parseInt(e.target.value));
+                        setNewTransaction({...newTransaction, category: selectedCategory});
+                    }}
                     className="input-field"
                 >
                     <option value="" disabled>Select a category</option>
-                    {categories.map((category, index) => (
-                        <option key={index} value={category}>
-                            {category} {/* Display category name */}
+                    {categories.map((category) => (
+                        <option key={category.id} value={category.id}>
+                            {category.name}
                         </option>
                     ))}
                 </select>
@@ -193,10 +209,10 @@ const Spending = () => {
                         transactions.map((transaction) => (
                             <li key={transaction.id} className="transaction-item">
                                 <div className="transaction-detail">
-                                    <strong>Amount:</strong> {transaction.amount} <br />
-                                    <strong>Category:</strong> {transaction.category} <br />
-                                    <strong>Type:</strong> {transaction.type} <br />
-                                    <strong>Date:</strong> {new Date(transaction.date).toLocaleDateString()} <br />
+                                    <strong>Amount:</strong> {transaction.amount} <br/>
+                                    <strong>Category:</strong> {transaction.category.name} <br/>
+                                    <strong>Type:</strong> {transaction.type} <br/>
+                                    <strong>Date:</strong> {new Date(transaction.date).toLocaleDateString()} <br/>
                                     <strong>Description:</strong> {transaction.description}
                                 </div>
                             </li>
