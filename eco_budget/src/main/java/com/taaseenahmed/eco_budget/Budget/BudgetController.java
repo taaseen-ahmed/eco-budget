@@ -1,12 +1,9 @@
 package com.taaseenahmed.eco_budget.Budget;
 
-import com.taaseenahmed.eco_budget.Category.Category;
-import com.taaseenahmed.eco_budget.Category.CategoryService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.server.ResponseStatusException;
 
 import javax.validation.Valid;
 import java.security.Principal;
@@ -18,15 +15,10 @@ import java.util.List;
 public class BudgetController {
 
     private final BudgetService budgetService;
-    private final CategoryService categoryService;
 
     @PostMapping("/create")
     public ResponseEntity<BudgetDTO> createBudget(@RequestBody BudgetDTO budgetDTO, Principal principal) {
-        Category category = categoryService.getCategoryById(budgetDTO.getCategoryId());
-        Budget budget = new Budget();
-        budget.setCategory(category);
-        budget.setAmount(budgetDTO.getAmount());
-        BudgetDTO response = budgetService.createBudget(budget, principal.getName());
+        BudgetDTO response = budgetService.createBudget(budgetDTO, principal.getName());
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 

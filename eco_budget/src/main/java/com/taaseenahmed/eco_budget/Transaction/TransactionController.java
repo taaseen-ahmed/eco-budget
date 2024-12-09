@@ -1,6 +1,5 @@
 package com.taaseenahmed.eco_budget.Transaction;
 
-import com.taaseenahmed.eco_budget.Category.Category;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -21,19 +20,8 @@ public class TransactionController {
     // Endpoint to create a new transaction for the authenticated user.
     @PostMapping
     public ResponseEntity<TransactionDTO> createTransaction(@RequestBody TransactionDTO transactionDTO, Principal principal) {
-        // Validate category existence
-        Category category = transactionService.getCategoryById(transactionDTO.getCategory().getId())
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid category ID"));
-
-        // Convert DTO to entity and set other fields
-        Transaction transaction = new Transaction();
-        transaction.setAmount(transactionDTO.getAmount());
-        transaction.setType(transactionDTO.getType());
-        transaction.setDate(transactionDTO.getDate());
-        transaction.setDescription(transactionDTO.getDescription());
-        transaction.setCategory(category);
-
-        TransactionDTO response = transactionService.createTransaction(transaction, principal.getName());
+        // Delegate business logic to service
+        TransactionDTO response = transactionService.createTransaction(transactionDTO, principal.getName());
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
@@ -63,7 +51,6 @@ public class TransactionController {
     // Endpoint to update an existing transaction by its ID.
     @PutMapping("/{id}")
     public ResponseEntity<TransactionDTO> updateTransaction(@PathVariable Long id, @Valid @RequestBody TransactionDTO transactionDTO) {
-        // Delegate the update logic to the service layer
         TransactionDTO updatedTransaction = transactionService.updateTransaction(id, transactionDTO);
         return ResponseEntity.ok(updatedTransaction);
     }

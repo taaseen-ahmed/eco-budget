@@ -23,22 +23,23 @@ public class TransactionService {
     private final CategoryRepository categoryRepository;
 
     // Create a new transaction for the authenticated user
-    public TransactionDTO createTransaction(Transaction transaction, String userEmail) {
-        // Fetch the user by email
+    public TransactionDTO createTransaction(TransactionDTO transactionDTO, String userEmail) {
         AppUser user = appUserRepository.findByEmail(userEmail)
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
-        // Associate the user with the transaction
+        Category category = categoryRepository.findById(transactionDTO.getCategory().getId())
+                .orElseThrow(() -> new RuntimeException("Category not found"));
+
+        Transaction transaction = new Transaction();
+        transaction.setAmount(transactionDTO.getAmount());
+        transaction.setType(transactionDTO.getType());
+        transaction.setDate(transactionDTO.getDate());
+        transaction.setDescription(transactionDTO.getDescription());
+        transaction.setCategory(category);
         transaction.setAppUser(user);
 
-        // Fetch the Category entity and associate it with the transaction
-        Long categoryId = transaction.getCategory().getId(); // Assuming the ID is provided in the request
-        Category category = categoryRepository.findById(categoryId)
-                .orElseThrow(() -> new RuntimeException("Category not found"));
-        transaction.setCategory(category);
-
         Transaction savedTransaction = transactionRepository.save(transaction);
-        return buildTransactionDTO(savedTransaction, buildAppUserDTO(user));
+        return convertToDTO(savedTransaction);
     }
 
     // Retrieve all transactions and convert to DTOs
@@ -61,42 +62,10 @@ public class TransactionService {
                 .collect(Collectors.toList());
     }
 
-    // Convert a transaction entity to a DTO
-    public TransactionDTO convertToDTO(Transaction transaction) {
-        AppUser appUser = transaction.getAppUser();
-        AppUserDTO appUserDTO = buildAppUserDTO(appUser);
-
-        // Convert Category to CategoryDTO
-        CategoryDTO categoryDTO = transaction.getCategory() != null
-                ? new CategoryDTO(transaction.getCategory().getId(), transaction.getCategory().getName())
-                : null;
-
-        return TransactionDTO.builder()
-                .id(transaction.getId())
-                .appUser(appUserDTO)
-                .amount(transaction.getAmount())
-                .category(categoryDTO)
-                .type(transaction.getType())
-                .date(transaction.getDate())
-                .description(transaction.getDescription())
-                .build();
-    }
-
-    // Get a transaction by its ID
+    // Fetch a single transaction by ID
     public Optional<TransactionDTO> getTransactionById(Long id) {
         Optional<Transaction> transaction = transactionRepository.findById(id);
-        return transaction.map(t -> buildTransactionDTO(t, convertToAppUserDTO(t.getAppUser())));
-    }
-
-    // Helper method to convert AppUser to AppUserDTO
-    private AppUserDTO convertToAppUserDTO(AppUser user) {
-        return AppUserDTO.builder()
-                .id(user.getId())
-                .firstName(user.getFirstName())
-                .lastName(user.getLastName())
-                .email(user.getEmail())
-                .role(user.getRole().name())
-                .build();
+        return transaction.map(this::convertToDTO);
     }
 
     // Update an existing transaction
@@ -133,36 +102,19 @@ public class TransactionService {
         transactionRepository.deleteById(id);
     }
 
-    // Helper method to build AppUserDTO
-    private AppUserDTO buildAppUserDTO(AppUser user) {
-        return AppUserDTO.builder()
-                .id(user.getId())
-                .firstName(user.getFirstName())
-                .lastName(user.getLastName())
-                .email(user.getEmail())
-                .role(user.getRole().name())
-                .build();
-    }
-
-    // Helper method to build TransactionDTO
-    private TransactionDTO buildTransactionDTO(Transaction transaction, AppUserDTO appUserDTO) {
-        // Convert Category to CategoryDTO
-        CategoryDTO categoryDTO = transaction.getCategory() != null
-                ? new CategoryDTO(transaction.getCategory().getId(), transaction.getCategory().getName())
-                : null;
+    // Convert a Transaction entity to a DTO
+    public TransactionDTO convertToDTO(Transaction transaction) {
+        CategoryDTO categoryDTO = new CategoryDTO(transaction.getCategory().getId(), transaction.getCategory().getName());
+        AppUserDTO appUserDTO = new AppUserDTO(transaction.getAppUser().getId(), transaction.getAppUser().getFirstName(), transaction.getAppUser().getLastName(), transaction.getAppUser().getEmail(), transaction.getAppUser().getRole().name());
 
         return TransactionDTO.builder()
                 .id(transaction.getId())
                 .appUser(appUserDTO)
                 .amount(transaction.getAmount())
-                .category(categoryDTO) // Pass the CategoryDTO here
+                .category(categoryDTO)
                 .type(transaction.getType())
                 .date(transaction.getDate())
                 .description(transaction.getDescription())
                 .build();
-    }
-
-    public Optional<Category> getCategoryById(Long id) {
-        return categoryRepository.findById(id);
     }
 }
