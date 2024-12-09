@@ -4,7 +4,8 @@ import Home from './Home/Home';
 import Registration from './Registration/Registration';
 import Login from './Login/Login';
 import Dashboard from './Dashboard/Dashboard';
-import Spending from './Spending/Spending'; // Import Spending page
+import Spending from './Spending/Spending';
+import Budget from './Budget/Budget'; // Import Budget page
 import PrivateRoute from './PrivateRoute';
 import './styles/App.css';
 
@@ -56,6 +57,7 @@ function AppContent({ isAuthenticated, setIsAuthenticated }) {
                 {isAuthenticated && (
                     <nav className="navbar">
                         <Link to="/spending" className="nav-link">Spending</Link>
+                        <Link to="/budget" className="nav-link">Budget</Link>
                     </nav>
                 )}
             </header>
@@ -70,7 +72,11 @@ function AppContent({ isAuthenticated, setIsAuthenticated }) {
                 />
                 <Route
                     path="/spending"
-                    element={<PrivateRoute element={<Spending />} isAuthenticated={isAuthenticated} />} // Protected Spending route
+                    element={<PrivateRoute element={<Spending />} isAuthenticated={isAuthenticated} />}
+                />
+                <Route
+                    path="/budget"
+                    element={<PrivateRoute element={<Budget />} isAuthenticated={isAuthenticated} />} // Protected Budget route
                 />
             </Routes>
         </div>

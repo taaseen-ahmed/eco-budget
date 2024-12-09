@@ -43,4 +43,10 @@ public class CategoryService {
         // Convert the saved Category entity to CategoryDTO with both id and name
         return new CategoryDTO(savedCategory.getId(), savedCategory.getName());
     }
+
+    // Fetch a category by ID
+    public Category getCategoryById(Long categoryId) {
+        return categoryRepository.findById(categoryId)
+                .orElseThrow(() -> new RuntimeException("Category not found"));
+    }
 }
