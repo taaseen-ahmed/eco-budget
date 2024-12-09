@@ -77,7 +77,7 @@ public class BudgetService {
         budgetRepository.delete(budget); // Delete the budget
     }
 
-    // Utility method to convert a Budget entity to a BudgetDTO
+    // Convert a Budget entity to a BudgetDTO
     private BudgetDTO convertToDTO(Budget budget) {
         BudgetDTO dto = new BudgetDTO();
         dto.setId(budget.getId());

@@ -1,0 +1,108 @@
+/* General Styles */
+body {
+    font-family: 'Arial', sans-serif;
+    background-color: #f4f7f6;
+    margin: 0;
+    padding: 0;
+}
+
+h2, h3 {
+    color: #333;
+    margin-bottom: 10px;
+}
+
+/* Container for Budget Form and Display */
+.container {
+    max-width: 800px;
+    margin: 30px auto;
+    padding: 20px;
+    background-color: #fff;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* Budget Form Styles */
+.budget-form {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    padding: 20px;
+    background-color: #f9fafb;
+    border-radius: 8px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+.budget-form input,
+.budget-form select,
+.budget-form button {
+    padding: 12px;
+    font-size: 16px;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+}
+
+.budget-form input,
+.budget-form select {
+    width: 100%;
+}
+
+.budget-form button {
+    background-color: #4caf50;
+    color: white;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+.budget-form button:hover {
+    background-color: #45a049;
+}
+
+/* Category Dropdown */
+.budget-form select {
+    background-color: #fff;
+}
+
+.budget-form option {
+    padding: 10px;
+}
+
+/* Budgets List */
+.budgets-list {
+    margin-top: 20px;
+}
+
+.budgets-list ul {
+    list-style-type: none;
+    padding: 0;
+}
+
+.budgets-list li {
+    background-color: #e3f2fd;
+    margin-bottom: 10px;
+    padding: 15px;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.budgets-list li p {
+    margin: 5px 0;
+}
+
+.budgets-list li p:first-child {
+    font-weight: bold;
+}
+
+/* Empty State */
+.empty-state {
+    text-align: center;
+    font-size: 18px;
+    color: #666;
+    padding: 20px;
+}
+
+/* Alerts */
+.alert {
+    color: #ff9800;
+    font-weight: bold;
+    margin-top: 20px;
+}

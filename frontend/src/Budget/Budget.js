@@ -1,17 +1,17 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
+import './Budget.css';
 
 const Budget = () => {
     const [categories, setCategories] = useState([]);
     const [budgets, setBudgets] = useState([]);
     const [newBudget, setNewBudget] = useState({
         amount: '',
-        category: null, // Initially set to null to avoid undefined category
+        category: null,
     });
     const [alertMessage, setAlertMessage] = useState('');
 
     useEffect(() => {
-        // Fetch categories and budgets when the component mounts
         const fetchCategories = async () => {
             try {
                 const token = localStorage.getItem('jwtToken');
@@ -60,9 +60,9 @@ const Budget = () => {
             setBudgets([...budgets, response.data]);
             setNewBudget({
                 amount: '',
-                category: null, // Reset category
+                category: null,
             });
-            setAlertMessage(''); // Reset alert message
+            setAlertMessage('');
         } catch (error) {
             console.error('Error adding budget:', error);
             setAlertMessage('Failed to add budget. Please try again.');
