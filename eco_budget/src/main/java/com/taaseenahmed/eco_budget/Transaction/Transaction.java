@@ -26,12 +26,15 @@ public class Transaction {
     @JoinColumn(name = "user_id", nullable = false)
     private AppUser appUser;
 
-    @ManyToOne(fetch = FetchType.EAGER) // Use EAGER fetch because you’ll often need the category details with transactions.
-    @JoinColumn(name = "category_id", nullable = false) // Maps to the 'category_id' column in the database.
-    private Category category; // Link the Transaction entity to the Category entity.
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "category_id", nullable = false)
+    private Category category;
 
     private BigDecimal amount;
     private String type;
     private LocalDateTime date;
     private String description;
+
+    @Column
+    private Double carbonFootprint;
 }

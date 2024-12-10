@@ -1,4 +1,4 @@
-import React, {useState, useEffect, useCallback} from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
 import './Spending.css';
 
@@ -15,19 +15,8 @@ const Spending = () => {
     });
     const transactionTypes = ["Income", "Expense"];
 
-    const fetchData = useCallback(async () => {
-        try {
-            await Promise.all([fetchTransactions(), fetchCategories()]);
-        } catch (error) {
-            console.error('Error loading data:', error);
-        }
-    }, []);
-
-    useEffect(() => {
-        fetchData();
-    }, [fetchData]);
-
-    const fetchTransactions = async () => {
+    // Fetch transactions from the backend
+    const fetchTransactions = useCallback(async () => {
         try {
             const token = localStorage.getItem('jwtToken');
             const response = await axios.get('/api/transaction/user', {
@@ -38,9 +27,10 @@ const Spending = () => {
             console.error('Error fetching transactions:', error);
             alert('Failed to fetch transactions. Please try again.');
         }
-    };
+    }, []);
 
-    const fetchCategories = async () => {
+    // Fetch categories
+    const fetchCategories = useCallback(async () => {
         try {
             const token = localStorage.getItem('jwtToken');
             const response = await axios.get('/api/categories', {
@@ -51,8 +41,25 @@ const Spending = () => {
             console.error('Error fetching categories:', error);
             alert('Failed to fetch categories. Please try again.');
         }
-    };
+    }, []);
 
+    // Fetch data
+    const fetchData = useCallback(async () => {
+        try {
+            await Promise.all([fetchTransactions(), fetchCategories()]);
+        } catch (error) {
+            console.error('Error loading data:', error);
+        }
+    }, [fetchTransactions, fetchCategories]);
+
+    useEffect(() => {
+        const loadData = async () => {
+            await fetchData();
+        };
+        loadData();
+    }, [fetchData]);
+
+    // Handle adding a new transaction
     const handleAddTransaction = async () => {
         try {
             if (!newTransaction.amount || !newTransaction.category || !newTransaction.type || !newTransaction.date) {
@@ -140,7 +147,7 @@ const Spending = () => {
                     value={newTransaction.category ? newTransaction.category.id : ''}
                     onChange={(e) => {
                         const selectedCategory = categories.find(cat => cat.id === parseInt(e.target.value));
-                        setNewTransaction({...newTransaction, category: selectedCategory});
+                        setNewTransaction({ ...newTransaction, category: selectedCategory });
                     }}
                     className="input-field"
                 >
@@ -213,7 +220,8 @@ const Spending = () => {
                                     <strong>Category:</strong> {transaction.category.name} <br/>
                                     <strong>Type:</strong> {transaction.type} <br/>
                                     <strong>Date:</strong> {new Date(transaction.date).toLocaleDateString()} <br/>
-                                    <strong>Description:</strong> {transaction.description}
+                                    <strong>Description:</strong> {transaction.description} <br/>
+                                    <strong>Carbon Footprint:</strong> {transaction.carbonFootprint ?? 'Not Available'} kg CO2
                                 </div>
                             </li>
                         ))

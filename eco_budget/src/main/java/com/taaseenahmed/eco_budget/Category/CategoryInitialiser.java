@@ -2,7 +2,6 @@ package com.taaseenahmed.eco_budget.Category;
 
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;
-import org.springframework.transaction.annotation.Transactional;
 
 @Component
 public class CategoryInitialiser implements CommandLineRunner {
@@ -14,23 +13,19 @@ public class CategoryInitialiser implements CommandLineRunner {
         this.categoryRepository = categoryRepository;
     }
 
-    @Override
-    @Transactional
-    public void run(String... args) throws Exception {
-        // Check if categories are already loaded
+    public void run(String... args) {
         if (categoryRepository.count() == 0) {
-            // Predefined categories, where the user is null
-            categoryRepository.save(new Category("Food"));
-            categoryRepository.save(new Category("Entertainment"));
-            categoryRepository.save(new Category("Groceries"));
-            categoryRepository.save(new Category("Healthcare"));
-            categoryRepository.save(new Category("Beauty"));
-            categoryRepository.save(new Category("Home & Family"));
-            categoryRepository.save(new Category("Shopping"));
-            categoryRepository.save(new Category("Income"));
-            categoryRepository.save(new Category("Transport"));
+            categoryRepository.save(new Category("Food", 1.8));
+            categoryRepository.save(new Category("Transport", 1.2));
+            categoryRepository.save(new Category("Groceries", 0.8));
+            categoryRepository.save(new Category("Healthcare", 0.1));
+            categoryRepository.save(new Category("Entertainment", 0.3));
+            categoryRepository.save(new Category("Beauty", 0.5));
+            categoryRepository.save(new Category("Home and Family", 0.6));
+            categoryRepository.save(new Category("Shopping", 0.7));
+            categoryRepository.save(new Category("Income", 0.0));
 
-            System.out.println("Default categories have been loaded.");
+            System.out.println("Default categories with multipliers have been loaded.");
         }
     }
 }

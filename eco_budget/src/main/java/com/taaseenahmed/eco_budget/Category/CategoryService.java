@@ -24,7 +24,7 @@ public class CategoryService {
 
         // Map Category to CategoryDTO (passing both id and name)
         return categories.stream()
-                .map(category -> new CategoryDTO(category.getId(), category.getName())) // Pass both id and name
+                .map(category -> new CategoryDTO(category.getId(), category.getName(), category.getCarbonMultiplier()))
                 .collect(Collectors.toList());
     }
 
@@ -36,12 +36,12 @@ public class CategoryService {
         Category category = new Category();
         category.setName(categoryName);
         category.setUser(user);
+        category.setCarbonMultiplier(null); // User-created categories do not have predefined multipliers
 
         // Save the category and get the saved entity
         Category savedCategory = categoryRepository.save(category);
 
-        // Convert the saved Category entity to CategoryDTO with both id and name
-        return new CategoryDTO(savedCategory.getId(), savedCategory.getName());
+        return new CategoryDTO(savedCategory.getId(), savedCategory.getName(), savedCategory.getCarbonMultiplier());
     }
 
     // Fetch a category by ID

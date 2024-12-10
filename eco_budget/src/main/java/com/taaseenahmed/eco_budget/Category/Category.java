@@ -21,15 +21,18 @@ public class Category {
     private Long id;
 
     @ManyToOne
-    @JoinColumn(name = "user_id", nullable = true) // Predefined categories can have null user_id
+    @JoinColumn(name = "user_id") // Predefined categories can have null user_id
     private AppUser user; // Null for predefined categories, non-null for user-created categories
 
     @Column(nullable = false)
     private String name;
 
-    // Constructor to create categories without an AppUser (for predefined categories)
-    public Category(String name) {
+    @Column
+    private Double carbonMultiplier;
+
+    public Category(String name, Double carbonMultiplier) {
         this.name = name;
-        this.user = null; // Set user to null for predefined categories
+        this.user = null;
+        this.carbonMultiplier = carbonMultiplier;
     }
 }

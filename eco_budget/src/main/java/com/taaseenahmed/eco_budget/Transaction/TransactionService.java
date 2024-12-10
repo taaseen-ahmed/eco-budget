@@ -38,6 +38,13 @@ public class TransactionService {
         transaction.setCategory(category);
         transaction.setAppUser(user);
 
+        // Calculate carbon footprint if the category has a multiplier
+        if (category.getCarbonMultiplier() != null) {
+            transaction.setCarbonFootprint(transactionDTO.getAmount().doubleValue() * category.getCarbonMultiplier());
+        } else {
+            transaction.setCarbonFootprint(null); // No footprint if the category multiplier is null
+        }
+
         Transaction savedTransaction = transactionRepository.save(transaction);
         return convertToDTO(savedTransaction);
     }
@@ -104,8 +111,18 @@ public class TransactionService {
 
     // Convert a Transaction entity to a DTO
     public TransactionDTO convertToDTO(Transaction transaction) {
-        CategoryDTO categoryDTO = new CategoryDTO(transaction.getCategory().getId(), transaction.getCategory().getName());
-        AppUserDTO appUserDTO = new AppUserDTO(transaction.getAppUser().getId(), transaction.getAppUser().getFirstName(), transaction.getAppUser().getLastName(), transaction.getAppUser().getEmail(), transaction.getAppUser().getRole().name());
+        CategoryDTO categoryDTO = new CategoryDTO(
+                transaction.getCategory().getId(),
+                transaction.getCategory().getName(),
+                transaction.getCategory().getCarbonMultiplier()
+        );
+        AppUserDTO appUserDTO = new AppUserDTO(
+                transaction.getAppUser().getId(),
+                transaction.getAppUser().getFirstName(),
+                transaction.getAppUser().getLastName(),
+                transaction.getAppUser().getEmail(),
+                transaction.getAppUser().getRole().name()
+        );
 
         return TransactionDTO.builder()
                 .id(transaction.getId())
@@ -115,6 +132,7 @@ public class TransactionService {
                 .type(transaction.getType())
                 .date(transaction.getDate())
                 .description(transaction.getDescription())
+                .carbonFootprint(transaction.getCarbonFootprint()) // Include the carbon footprint
                 .build();
     }
 }

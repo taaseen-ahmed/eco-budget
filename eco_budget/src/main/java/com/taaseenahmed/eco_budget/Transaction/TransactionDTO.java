@@ -15,8 +15,9 @@ public class TransactionDTO {
     private Long id;
     private AppUserDTO appUser;
     private BigDecimal amount;
-    private CategoryDTO category; // Updated to include a CategoryDTO
+    private CategoryDTO category;
     private String type;
     private LocalDateTime date;
     private String description;
+    private Double carbonFootprint;
 }
