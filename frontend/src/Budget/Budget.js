@@ -94,52 +94,53 @@ const Budget = () => {
         <div className="container">
             <h2>Budget</h2>
 
-            {/* Budget Form */}
-            <div className="budget-form">
-                <input
-                    type="number"
-                    placeholder="Amount"
-                    value={newBudget.amount}
-                    onChange={(e) => setNewBudget({ ...newBudget, amount: e.target.value })}
-                />
+            <div className="budget-form-container">
+                <div className="budget-form">
+                    <input
+                        type="number"
+                        placeholder="Amount"
+                        value={newBudget.amount}
+                        onChange={(e) => setNewBudget({ ...newBudget, amount: e.target.value })}
+                    />
 
-                <input
-                    type="date"
-                    placeholder="Start Date"
-                    value={newBudget.startDate}
-                    onChange={(e) => setNewBudget({ ...newBudget, startDate: e.target.value })}
-                />
+                    <input
+                        type="date"
+                        placeholder="Start Date"
+                        value={newBudget.startDate}
+                        onChange={(e) => setNewBudget({ ...newBudget, startDate: e.target.value })}
+                    />
 
-                <input
-                    type="date"
-                    placeholder="End Date"
-                    value={newBudget.endDate}
-                    onChange={(e) => setNewBudget({ ...newBudget, endDate: e.target.value })}
-                />
+                    <input
+                        type="date"
+                        placeholder="End Date"
+                        value={newBudget.endDate}
+                        onChange={(e) => setNewBudget({ ...newBudget, endDate: e.target.value })}
+                    />
 
-                {/* Category Dropdown */}
-                <select
-                    value={newBudget.category ? newBudget.category.id : ''}
-                    onChange={(e) => {
-                        const selectedCategory = categories.find(
-                            (cat) => cat.id === parseInt(e.target.value)
-                        );
-                        setNewBudget({ ...newBudget, category: selectedCategory });
-                    }}
-                >
-                    <option value="" disabled>
-                        Select a category
-                    </option>
-                    {categories.map((category) => (
-                        <option key={category.id} value={category.id}>
-                            {category.name}
+                    {/* Category Dropdown */}
+                    <select
+                        value={newBudget.category ? newBudget.category.id : ''}
+                        onChange={(e) => {
+                            const selectedCategory = categories.find(
+                                (cat) => cat.id === parseInt(e.target.value)
+                            );
+                            setNewBudget({ ...newBudget, category: selectedCategory });
+                        }}
+                    >
+                        <option value="" disabled>
+                            Select a category
                         </option>
-                    ))}
-                </select>
+                        {categories.map((category) => (
+                            <option key={category.id} value={category.id}>
+                                {category.name}
+                            </option>
+                        ))}
+                    </select>
 
-                <button onClick={handleAddBudget}>Add Budget</button>
+                    <button onClick={handleAddBudget}>Add Budget</button>
 
-                {alertMessage && <div className="alert">{alertMessage}</div>}
+                    {alertMessage && <div className="alert">{alertMessage}</div>}
+                </div>
             </div>
 
             {/* Display Budgets */}
@@ -151,10 +152,12 @@ const Budget = () => {
                     <ul>
                         {budgets.map((budget) => (
                             <li key={budget.id}>
-                                <p>Amount: {budget.amount}</p>
+                                <p>Amount: £{budget.amount}</p>
                                 <p>Category: {budget.categoryName || 'No category'}</p>
-                                <p>Total Spent: {budget.totalSpent}</p>
-                                <Pie data={getChartData(budget)} />
+                                <p>Total Spent: £{budget.totalSpent}</p>
+                                <div className="pie-chart-container">
+                                    <Pie data={getChartData(budget)} />
+                                </div>
                             </li>
                         ))}
                     </ul>

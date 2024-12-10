@@ -1,108 +1,122 @@
-/* General Styles */
-body {
-    font-family: 'Arial', sans-serif;
-    background-color: #f4f7f6;
-    margin: 0;
-    padding: 0;
-}
 
-h2, h3 {
-    color: #333;
-    margin-bottom: 10px;
-}
-
-/* Container for Budget Form and Display */
 .container {
-    max-width: 800px;
-    margin: 30px auto;
+    max-width: 1200px;
+    margin: 0 auto;
     padding: 20px;
-    background-color: #fff;
+}
+
+h2 {
+    font-size: 2.5rem;
+    color: #333;
+    text-align: center;
+    margin-bottom: 30px;
+}
+
+.budget-form-container {
+    background-color: white;
+    padding: 20px;
     border-radius: 8px;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    max-width: 500px;
+    margin: 0 auto;
+    margin-bottom: 40px;
 }
 
-/* Budget Form Styles */
 .budget-form {
     display: flex;
     flex-direction: column;
-    gap: 15px;
-    padding: 20px;
-    background-color: #f9fafb;
-    border-radius: 8px;
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    gap: 10px;
 }
 
 .budget-form input,
 .budget-form select,
 .budget-form button {
-    padding: 12px;
-    font-size: 16px;
-    border: 1px solid #ddd;
-    border-radius: 6px;
-}
-
-.budget-form input,
-.budget-form select {
-    width: 100%;
+    padding: 10px;
+    font-size: 1rem;
+    border-radius: 5px;
+    border: 1px solid #ccc;
 }
 
 .budget-form button {
-    background-color: #4caf50;
+    background-color: #4CAF50;
     color: white;
     cursor: pointer;
-    transition: background-color 0.3s;
+    border: none;
 }
 
 .budget-form button:hover {
     background-color: #45a049;
 }
 
-/* Category Dropdown */
-.budget-form select {
-    background-color: #fff;
-}
-
-.budget-form option {
+.alert {
     padding: 10px;
+    background-color: #f8d7da;
+    color: #721c24;
+    margin-top: 20px;
+    border-radius: 5px;
+    text-align: center;
 }
 
-/* Budgets List */
 .budgets-list {
-    margin-top: 20px;
+    margin-top: 40px;
+}
+
+.budgets-list h3 {
+    font-size: 1.8rem;
+    color: #333;
+    margin-bottom: 20px;
 }
 
 .budgets-list ul {
-    list-style-type: none;
+    list-style: none;
     padding: 0;
 }
 
 .budgets-list li {
-    background-color: #e3f2fd;
-    margin-bottom: 10px;
-    padding: 15px;
-    border-radius: 8px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-}
-
-.budgets-list li p {
-    margin: 5px 0;
-}
-
-.budgets-list li p:first-child {
-    font-weight: bold;
-}
-
-/* Empty State */
-.empty-state {
-    text-align: center;
-    font-size: 18px;
-    color: #666;
+    background-color: #f9f9f9;
     padding: 20px;
+    margin-bottom: 20px;
+    border-radius: 8px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
 }
 
-/* Alerts */
-.alert {
-    color: #ff9800;
-    font-weight: bold;
-    margin-top: 20px;
+.budgets-list p {
+    font-size: 1.1rem;
+    color: #555;
+}
+
+.pie-chart-container {
+    width: 100%;
+    max-width: 400px;
+    height: 300px;
+    margin: 20px auto;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.empty-state {
+    font-size: 1.2rem;
+    color: #888;
+    text-align: center;
+    margin-top: 30px;
+}
+
+/* Media queries for responsiveness */
+@media (max-width: 768px) {
+    .budget-form-container {
+        padding: 15px;
+    }
+
+    .budget-form {
+        max-width: 100%;
+    }
+
+    .budgets-list li {
+        padding: 15px;
+    }
+
+    .pie-chart-container {
+        max-width: 250px;
+    }
 }
