@@ -4,9 +4,13 @@ import com.taaseenahmed.eco_budget.AppUser.AppUser;
 import com.taaseenahmed.eco_budget.AppUser.AppUserRepository;
 import com.taaseenahmed.eco_budget.Category.Category;
 import com.taaseenahmed.eco_budget.Category.CategoryService;
+import com.taaseenahmed.eco_budget.Transaction.Transaction;
+import com.taaseenahmed.eco_budget.Transaction.TransactionRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -16,7 +20,8 @@ public class BudgetService {
 
     private final BudgetRepository budgetRepository;
     private final AppUserRepository appUserRepository;
-    private final CategoryService categoryService;  // Add CategoryService here
+    private final CategoryService categoryService;
+    private final TransactionRepository transactionRepository;
 
     // Create a new budget for the authenticated user
     public BudgetDTO createBudget(BudgetDTO budgetDTO, String userEmail) {
@@ -29,6 +34,8 @@ public class BudgetService {
         budget.setAppUser(user);
         budget.setCategory(category);
         budget.setAmount(budgetDTO.getAmount());
+        budget.setStartDate(budgetDTO.getStartDate());
+        budget.setEndDate(budgetDTO.getEndDate());
 
         Budget savedBudget = budgetRepository.save(budget);
         return convertToDTO(savedBudget);
@@ -58,6 +65,8 @@ public class BudgetService {
 
         budget.setAmount(budgetDTO.getAmount());
         budget.setCategory(category);
+        budget.setStartDate(budgetDTO.getStartDate());
+        budget.setEndDate(budgetDTO.getEndDate());
 
         // Save and return the updated budget as a DTO
         Budget updatedBudget = budgetRepository.save(budget);
@@ -71,13 +80,23 @@ public class BudgetService {
         budgetRepository.delete(budget);
     }
 
-    // Convert a Budget entity to a BudgetDTO
+    public Double calculateTotalSpent(Long categoryId, LocalDateTime startDate, LocalDateTime endDate) {
+        List<Transaction> transactions = transactionRepository.findByCategoryIdAndDateBetween(categoryId, startDate, endDate);
+        return transactions.stream()
+                .map(Transaction::getAmount)
+                .reduce(BigDecimal.ZERO, BigDecimal::add)
+                .doubleValue();
+    }
+
     private BudgetDTO convertToDTO(Budget budget) {
         BudgetDTO dto = new BudgetDTO();
         dto.setId(budget.getId());
         dto.setCategoryId(budget.getCategory().getId());
         dto.setCategoryName(budget.getCategory().getName());
         dto.setAmount(budget.getAmount());
+        dto.setStartDate(budget.getStartDate());
+        dto.setEndDate(budget.getEndDate());
+        dto.setTotalSpent(calculateTotalSpent(budget.getCategory().getId(), budget.getStartDate(), budget.getEndDate())); // Set totalSpent
         return dto;
     }
 }

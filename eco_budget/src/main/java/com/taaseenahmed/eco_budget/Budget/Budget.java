@@ -28,4 +28,6 @@ public class Budget {
     private Category category;
 
     private Double amount;
+    private LocalDateTime startDate;
+    private LocalDateTime endDate;
 }

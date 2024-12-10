@@ -14,4 +14,7 @@ public class BudgetDTO {
     private Long categoryId;
     private String categoryName;
     private Double amount;
+    private LocalDateTime startDate;
+    private LocalDateTime endDate;
+    private Double totalSpent;
 }

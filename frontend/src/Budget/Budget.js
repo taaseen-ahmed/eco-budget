@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
+import { Pie } from 'react-chartjs-2';
+import 'chart.js/auto';
 import './Budget.css';
 
 const Budget = () => {
@@ -8,6 +10,8 @@ const Budget = () => {
     const [newBudget, setNewBudget] = useState({
         amount: '',
         category: null,
+        startDate: '',
+        endDate: ''
     });
     const [alertMessage, setAlertMessage] = useState('');
 
@@ -41,8 +45,8 @@ const Budget = () => {
     }, []);
 
     const handleAddBudget = async () => {
-        if (!newBudget.category || !newBudget.amount) {
-            setAlertMessage('Please select a category and enter an amount.');
+        if (!newBudget.category || !newBudget.amount || !newBudget.startDate || !newBudget.endDate) {
+            setAlertMessage('Please fill in all fields.');
             return;
         }
 
@@ -50,7 +54,9 @@ const Budget = () => {
             const token = localStorage.getItem('jwtToken');
             const budgetToSend = {
                 amount: newBudget.amount,
-                categoryId: newBudget.category.id, // Send only the category ID here
+                categoryId: newBudget.category.id,
+                startDate: `${newBudget.startDate}T00:00:00`,
+                endDate: `${newBudget.endDate}T23:59:59`
             };
 
             const response = await axios.post('/api/budgets/create', budgetToSend, {
@@ -61,12 +67,27 @@ const Budget = () => {
             setNewBudget({
                 amount: '',
                 category: null,
+                startDate: '',
+                endDate: ''
             });
             setAlertMessage('');
         } catch (error) {
             console.error('Error adding budget:', error);
             setAlertMessage('Failed to add budget. Please try again.');
         }
+    };
+
+    const getChartData = (budget) => {
+        return {
+            labels: ['Used', 'Remaining'],
+            datasets: [
+                {
+                    data: [budget.totalSpent, budget.amount - budget.totalSpent],
+                    backgroundColor: ['#FF6384', '#36A2EB'],
+                    hoverBackgroundColor: ['#FF6384', '#36A2EB']
+                }
+            ]
+        };
     };
 
     return (
@@ -80,6 +101,20 @@ const Budget = () => {
                     placeholder="Amount"
                     value={newBudget.amount}
                     onChange={(e) => setNewBudget({ ...newBudget, amount: e.target.value })}
+                />
+
+                <input
+                    type="date"
+                    placeholder="Start Date"
+                    value={newBudget.startDate}
+                    onChange={(e) => setNewBudget({ ...newBudget, startDate: e.target.value })}
+                />
+
+                <input
+                    type="date"
+                    placeholder="End Date"
+                    value={newBudget.endDate}
+                    onChange={(e) => setNewBudget({ ...newBudget, endDate: e.target.value })}
                 />
 
                 {/* Category Dropdown */}
@@ -118,6 +153,8 @@ const Budget = () => {
                             <li key={budget.id}>
                                 <p>Amount: {budget.amount}</p>
                                 <p>Category: {budget.categoryName || 'No category'}</p>
+                                <p>Total Spent: {budget.totalSpent}</p>
+                                <Pie data={getChartData(budget)} />
                             </li>
                         ))}
                     </ul>
