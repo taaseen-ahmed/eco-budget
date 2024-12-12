@@ -31,15 +31,14 @@ public class ChatGPTService {
 
     // Method to get carbon multiplier based on category name and transaction description
     public Double getCarbonMultiplier(String categoryName, String description) {
-        if (description == null || description.isBlank()) {
-            return null; // Return null if description is empty or null
-        }
-
         try {
-            // Create a prompt to send to ChatGPT API
-            String prompt = String.format("Provide a single numeric carbon footprint multiplier in kilograms of CO2 per dollar spent for a transaction in the '%s' category. This is a description of the transaction: %s. Only provide the numeric multiplier.", categoryName, description);
+            String prompt;
+            if (description == null || description.isBlank()) {
+                prompt = String.format("Provide a single numeric carbon footprint multiplier in kilograms of CO2 per dollar spent for a transaction in the '%s' category. Only provide the numeric multiplier.", categoryName);
+            } else {
+                prompt = String.format("Provide a single numeric carbon footprint multiplier in kilograms of CO2 per dollar spent for a transaction in the '%s' category. This is a description of the transaction: %s. Only provide the numeric multiplier.", categoryName, description);
+            }
 
-            // Convert the request body to JSON
             String requestBody = objectMapper.writeValueAsString(
                     new ChatGPTRequest(MODEL, prompt, 0.7)
             );

@@ -2,6 +2,7 @@ package com.taaseenahmed.eco_budget.Category;
 
 import com.taaseenahmed.eco_budget.AppUser.AppUser;
 import com.taaseenahmed.eco_budget.AppUser.AppUserRepository;
+import com.taaseenahmed.eco_budget.Transaction.ChatGPTService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -14,6 +15,7 @@ public class CategoryService {
 
     private final CategoryRepository categoryRepository;
     private final AppUserRepository appUserRepository;
+    private final ChatGPTService chatGPTService;
 
     // Get all categories for a user (returning CategoryDTOs)
     public List<CategoryDTO> getCategoriesForUser(String userEmail) {
@@ -33,10 +35,13 @@ public class CategoryService {
         AppUser user = appUserRepository.findByEmail(userEmail)
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
+        // Request carbon multiplier from ChatGPT
+        Double carbonMultiplier = chatGPTService.getCarbonMultiplier(categoryName, null);
+
         Category category = new Category();
         category.setName(categoryName);
         category.setUser(user);
-        category.setCarbonMultiplier(null); // User-created categories do not have predefined multipliers
+        category.setCarbonMultiplier(carbonMultiplier); // Set the ChatGPT-derived carbon multiplier
 
         // Save the category and get the saved entity
         Category savedCategory = categoryRepository.save(category);
