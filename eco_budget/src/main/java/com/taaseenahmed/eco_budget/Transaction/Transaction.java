@@ -37,4 +37,7 @@ public class Transaction {
 
     @Column
     private Double carbonFootprint;
+
+    @Column(nullable = false)
+    private boolean isChatGPTDerivedCarbonFootprint; // Indicates if the carbon footprint was derived using ChatGPT
 }

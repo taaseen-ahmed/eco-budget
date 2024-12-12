@@ -13,6 +13,7 @@ const Spending = () => {
         date: '',
         description: ''
     });
+    const [hoveredTransactionId, setHoveredTransactionId] = useState(null); // New state for hovering
     const transactionTypes = ["Income", "Expense"];
 
     // Fetch transactions from the backend
@@ -214,14 +215,27 @@ const Spending = () => {
                         <p>No transactions found.</p>
                     ) : (
                         transactions.map((transaction) => (
-                            <li key={transaction.id} className="transaction-item">
+                            <li
+                                key={transaction.id}
+                                className="transaction-item"
+                                onMouseEnter={() => setHoveredTransactionId(transaction.id)} // Set hover state
+                                onMouseLeave={() => setHoveredTransactionId(null)} // Reset hover state
+                            >
                                 <div className="transaction-detail">
-                                    <strong>Amount:</strong> {transaction.amount} <br/>
-                                    <strong>Category:</strong> {transaction.category.name} <br/>
-                                    <strong>Type:</strong> {transaction.type} <br/>
-                                    <strong>Date:</strong> {new Date(transaction.date).toLocaleDateString()} <br/>
-                                    <strong>Description:</strong> {transaction.description} <br/>
+                                    <strong>Amount:</strong> {transaction.amount} <br />
+                                    <strong>Category:</strong> {transaction.category.name} <br />
+                                    <strong>Type:</strong> {transaction.type} <br />
+                                    <strong>Date:</strong> {new Date(transaction.date).toLocaleDateString()} <br />
+                                    <strong>Description:</strong> {transaction.description} <br />
                                     <strong>Carbon Footprint:</strong> {transaction.carbonFootprint ?? 'Not Available'} kg CO2
+                                    {/* Conditional message based on hover and ChatGPT-derived carbon footprint */}
+                                    {hoveredTransactionId === transaction.id && transaction.isChatGPTDerivedCarbonFootprint !== undefined && (
+                                        <p className="tooltip-message">
+                                            {transaction.isChatGPTDerivedCarbonFootprint
+                                                ? 'This carbon footprint was estimated using ChatGPT.'
+                                                : 'This carbon footprint was not estimated using ChatGPT.'}
+                                        </p>
+                                    )}
                                 </div>
                             </li>
                         ))

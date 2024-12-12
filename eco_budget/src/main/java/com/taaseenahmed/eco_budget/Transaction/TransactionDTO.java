@@ -2,6 +2,7 @@ package com.taaseenahmed.eco_budget.Transaction;
 
 import com.taaseenahmed.eco_budget.AppUser.AppUserDTO;
 import com.taaseenahmed.eco_budget.Category.CategoryDTO;
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 
@@ -11,6 +12,7 @@ import java.time.LocalDateTime;
 // Data Transfer Object (DTO) for transactions, used to expose relevant data in API responses.
 @Data
 @Builder
+@AllArgsConstructor
 public class TransactionDTO {
     private Long id;
     private AppUserDTO appUser;
@@ -20,4 +22,6 @@ public class TransactionDTO {
     private LocalDateTime date;
     private String description;
     private Double carbonFootprint;
+    private Boolean isChatGPTDerivedCarbonFootprint;
+    private Double carbonMultiplierUsed;
 }

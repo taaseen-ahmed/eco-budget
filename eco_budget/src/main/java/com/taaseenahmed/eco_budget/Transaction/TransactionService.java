@@ -21,15 +21,19 @@ public class TransactionService {
     private final TransactionRepository transactionRepository;
     private final AppUserRepository appUserRepository;
     private final CategoryRepository categoryRepository;
+    private final ChatGPTService chatGPTService;
 
     // Create a new transaction for the authenticated user
     public TransactionDTO createTransaction(TransactionDTO transactionDTO, String userEmail) {
+        // Fetch the user by email
         AppUser user = appUserRepository.findByEmail(userEmail)
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
+        // Fetch the category for the transaction
         Category category = categoryRepository.findById(transactionDTO.getCategory().getId())
                 .orElseThrow(() -> new RuntimeException("Category not found"));
 
+        // Create and populate a new Transaction object
         Transaction transaction = new Transaction();
         transaction.setAmount(transactionDTO.getAmount());
         transaction.setType(transactionDTO.getType());
@@ -38,21 +42,42 @@ public class TransactionService {
         transaction.setCategory(category);
         transaction.setAppUser(user);
 
-        // Calculate carbon footprint if the category has a multiplier
-        if (category.getCarbonMultiplier() != null) {
-            transaction.setCarbonFootprint(transactionDTO.getAmount().doubleValue() * category.getCarbonMultiplier());
-        } else {
-            transaction.setCarbonFootprint(null); // No footprint if the category multiplier is null
+        // Determine carbon footprint based on description or category multiplier
+        Double carbonMultiplierUsed = null;
+        if (transactionDTO.getDescription() != null && !transactionDTO.getDescription().isBlank()) {
+            // Get ChatGPT-derived carbon multiplier based on description
+            carbonMultiplierUsed = chatGPTService.getCarbonMultiplier(
+                    transactionDTO.getCategory().getName(),
+                    transactionDTO.getDescription()
+            );
         }
 
+        // Apply carbon footprint based on multiplier or default category multiplier
+        if (carbonMultiplierUsed != null) {
+            double chatGPTCarbonFootprint = transactionDTO.getAmount().doubleValue() * carbonMultiplierUsed;
+            transaction.setCarbonFootprint(chatGPTCarbonFootprint);
+            transaction.setChatGPTDerivedCarbonFootprint(true);
+        } else if (category.getCarbonMultiplier() != null) {
+            double defaultCarbonFootprint = transactionDTO.getAmount().doubleValue() * category.getCarbonMultiplier();
+            transaction.setCarbonFootprint(defaultCarbonFootprint);
+            transaction.setChatGPTDerivedCarbonFootprint(false);
+            carbonMultiplierUsed = category.getCarbonMultiplier();
+        } else {
+            transaction.setCarbonFootprint(null);
+            transaction.setChatGPTDerivedCarbonFootprint(false);
+        }
+
+        // Save the new transaction
         Transaction savedTransaction = transactionRepository.save(transaction);
-        return convertToDTO(savedTransaction);
+        TransactionDTO responseDTO = convertToDTO(savedTransaction);
+        responseDTO.setCarbonMultiplierUsed(carbonMultiplierUsed); // Set the multiplier used
+        return responseDTO;
     }
 
-    // Retrieve all transactions and convert to DTOs
+    // Retrieve all transactions and convert them to DTOs
     public List<TransactionDTO> getAllTransactions() {
         return transactionRepository.findAll().stream()
-                .map(this::convertToDTO) // Convert each transaction to a DTO
+                .map(this::convertToDTO)
                 .collect(Collectors.toList());
     }
 
@@ -62,7 +87,7 @@ public class TransactionService {
         AppUser user = appUserRepository.findByEmail(userEmail)
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
-        // Retrieve the user's transactions
+        // Retrieve the user's transactions and convert to DTOs
         List<Transaction> transactions = transactionRepository.findByAppUserId(user.getId());
         return transactions.stream()
                 .map(this::convertToDTO)
@@ -72,12 +97,12 @@ public class TransactionService {
     // Fetch a single transaction by ID
     public Optional<TransactionDTO> getTransactionById(Long id) {
         Optional<Transaction> transaction = transactionRepository.findById(id);
-        return transaction.map(this::convertToDTO);
+        return transaction.map(this::convertToDTO); // Return transaction as DTO if found
     }
 
     // Update an existing transaction
     public TransactionDTO updateTransaction(Long id, TransactionDTO transactionDTO) {
-        // Fetch the existing transaction
+        // Fetch the existing transaction by ID
         Transaction existingTransaction = transactionRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Transaction not found with id: " + id));
 
@@ -94,10 +119,8 @@ public class TransactionService {
             existingTransaction.setCategory(category);
         }
 
-        // Save the updated transaction
+        // Save and return the updated transaction as a DTO
         Transaction updatedTransaction = transactionRepository.save(existingTransaction);
-
-        // Convert to DTO and return
         return convertToDTO(updatedTransaction);
     }
 
@@ -106,11 +129,12 @@ public class TransactionService {
         if (!transactionRepository.existsById(id)) {
             throw new ResourceNotFoundException("Transaction not found with id: " + id);
         }
-        transactionRepository.deleteById(id);
+        transactionRepository.deleteById(id); // Delete the transaction
     }
 
     // Convert a Transaction entity to a DTO
     public TransactionDTO convertToDTO(Transaction transaction) {
+        // Convert related Category and AppUser entities to DTOs
         CategoryDTO categoryDTO = new CategoryDTO(
                 transaction.getCategory().getId(),
                 transaction.getCategory().getName(),
@@ -124,6 +148,12 @@ public class TransactionService {
                 transaction.getAppUser().getRole().name()
         );
 
+        // Determine the multiplier used for carbon footprint
+        Double carbonMultiplierUsed = transaction.isChatGPTDerivedCarbonFootprint()
+                ? transaction.getCarbonFootprint() / transaction.getAmount().doubleValue()
+                : transaction.getCategory().getCarbonMultiplier();
+
+        // Return a populated TransactionDTO
         return TransactionDTO.builder()
                 .id(transaction.getId())
                 .appUser(appUserDTO)
@@ -132,7 +162,9 @@ public class TransactionService {
                 .type(transaction.getType())
                 .date(transaction.getDate())
                 .description(transaction.getDescription())
-                .carbonFootprint(transaction.getCarbonFootprint()) // Include the carbon footprint
+                .carbonFootprint(transaction.getCarbonFootprint())
+                .isChatGPTDerivedCarbonFootprint(transaction.isChatGPTDerivedCarbonFootprint())
+                .carbonMultiplierUsed(carbonMultiplierUsed)
                 .build();
     }
 }
