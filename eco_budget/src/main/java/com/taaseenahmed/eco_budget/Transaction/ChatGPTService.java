@@ -25,8 +25,16 @@ public class ChatGPTService {
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     public ChatGPTService() {
-        Dotenv dotenv = Dotenv.configure().load();
-        this.apiKey = dotenv.get("CHATGPT_API_KEY");
+        if (System.getenv("CHATGPT_API_KEY") != null) {
+            this.apiKey = System.getenv("CHATGPT_API_KEY");
+        } else {
+            Dotenv dotenv = Dotenv.configure().load();
+            this.apiKey = dotenv.get("CHATGPT_API_KEY");
+        }
+
+        if (this.apiKey == null || this.apiKey.isBlank()) {
+            throw new IllegalStateException("CHATGPT_API_KEY environment variable is not set or is empty.");
+        }
     }
 
     // Method to get carbon multiplier based on category name and transaction description
