@@ -1,7 +1,6 @@
-version: '3.8'
-
 services:
   frontend:
+    container_name: frontend
     build:
       context: ./frontend
       dockerfile: Dockerfile.frontend
@@ -13,6 +12,7 @@ services:
       - eco-network  # Use the same network to allow communication between services
 
   backend:
+    container_name: backend
     build:
       context: ./eco_budget
       dockerfile: Dockerfile.backend
