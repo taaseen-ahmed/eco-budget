@@ -29,8 +29,13 @@ deploy:
     - chmod 600 ~/.ssh/id_rsa
     - ssh-keyscan -H 13.49.0.17 >> ~/.ssh/known_hosts
   script:
+    - echo "Checking SSH key access"
+    - ssh -i ~/.ssh/id_rsa ubuntu@13.49.0.17 'echo "SSH connection successful!"'
+    - echo "Stopping existing containers"
     - ssh -i ~/.ssh/id_rsa ubuntu@13.49.0.17 'docker-compose -f ~/eco-budget/docker-compose.yml down'
-    - scp docker-compose.yml ubuntu@13.49.0.17:~/eco-budget/docker-compose.yml
+    - echo "Copying docker-compose.yml to EC2 instance"
+    - scp -i ~/.ssh/id_rsa docker-compose.yml ubuntu@13.49.0.17:~/eco-budget/docker-compose.yml
+    - echo "Starting containers with updated configuration"
     - ssh -i ~/.ssh/id_rsa ubuntu@13.49.0.17 'docker-compose -f ~/eco-budget/docker-compose.yml up -d'
   only:
     - main
