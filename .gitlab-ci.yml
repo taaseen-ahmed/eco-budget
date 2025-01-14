@@ -21,7 +21,7 @@ build:
 
 deploy:
   stage: deploy
-  image: alpine:latest
+  image: alpine:3.17
   before_script:
     - apk update && apk add --no-cache openssh-client
     - mkdir -p ~/.ssh
@@ -29,8 +29,8 @@ deploy:
     - chmod 600 ~/.ssh/id_rsa
     - ssh-keyscan -H 13.49.0.17 >> ~/.ssh/known_hosts
   script:
-    - ssh ubuntu@13.49.0.17 'docker-compose -f ~/eco-budget/docker-compose.yml down'
+    - ssh -i ~/.ssh/id_rsa ubuntu@13.49.0.17 'docker-compose -f ~/eco-budget/docker-compose.yml down'
     - scp docker-compose.yml ubuntu@13.49.0.17:~/eco-budget/docker-compose.yml
-    - ssh ubuntu@13.49.0.17 'docker-compose -f ~/eco-budget/docker-compose.yml up -d'
+    - ssh -i ~/.ssh/id_rsa ubuntu@13.49.0.17 'docker-compose -f ~/eco-budget/docker-compose.yml up -d'
   only:
     - main
