@@ -3,7 +3,7 @@ services:
     container_name: frontend
     build:
       context: ./frontend
-      dockerfile: Dockerfile.frontend
+      dockerfile: Dockerfile
     ports:
       - "80:80"  # Exposing frontend on port 80
     depends_on:
@@ -15,16 +15,15 @@ services:
     container_name: backend
     build:
       context: ./eco_budget
-      dockerfile: Dockerfile.backend
+      dockerfile: Dockerfile
     ports:
       - "8080:8080"  # Expose backend on port 8080
     environment:
-      - SPRING_PROFILES_ACTIVE=dev
-      - SPRING_DATASOURCE_URL=jdbc:postgresql://db:5432/eco_budget
-      - SPRING_DATASOURCE_USERNAME=postgres
-      - SPRING_DATASOURCE_PASSWORD=postgres
-    env_file:
-      - .env
+      SPRING_PROFILES_ACTIVE: dev
+      SPRING_DATASOURCE_URL: ${SPRING_DATASOURCE_URL}
+      SPRING_DATASOURCE_USERNAME: ${SPRING_DATASOURCE_USERNAME}
+      SPRING_DATASOURCE_PASSWORD: ${SPRING_DATASOURCE_PASSWORD}
+      CHATGPT_API_KEY: ${CHATGPT_API_KEY}
     depends_on:
       - db  # Ensure the database is started before backend
     networks:
@@ -34,9 +33,9 @@ services:
     image: postgres:13  # You can adjust the version if needed
     container_name: eco_db
     environment:
-      - POSTGRES_DB=eco_budget
-      - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD=postgres
+      POSTGRES_DB: eco_budget
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
     ports:
       - "5432:5432"  # Expose Postgres on port 5432
     volumes:
