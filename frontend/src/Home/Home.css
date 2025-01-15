@@ -1,53 +1,120 @@
-/* Home page styles */
 .home {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    height: 80vh;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-}
-
-.home-content {
-    text-align: center;
-    padding: 2rem;
-    max-width: 400px;
-    background: #f9f9f9;
-    border-radius: 8px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-}
-
-.home h1 {
-    color: #141413;
-    font-size: 2.5rem;
-}
-
-.home p {
-    color: #141413;
-    font-size: 1.1rem;
-    margin: 20px 0;
-}
-
-.home-links {
+    font-family: 'Inter', sans-serif;
     display: flex;
     flex-direction: column;
-    gap: 15px;
+    min-height: 100vh;
+    margin: 0;
 }
 
-.home-link {
-    text-decoration: none;
-    padding: 10px;
-    background: #87CEEB;
-    color: black;
-    border-radius: 4px;
+.hero-section {
+    background-color: var(--primary-color);
+    color: white;
+    padding: 6rem 2rem;
     text-align: center;
+    margin-bottom: 3rem;
+}
+
+.hero-content h1 {
+    font-size: 3rem;
+    font-weight: 700;
+    margin-bottom: 1rem;
+}
+
+.hero-content p {
+    font-size: 1.2rem;
+    margin-bottom: 1rem;
+}
+
+.home-links .home-link {
+    padding: 0.75rem 2rem;
+    font-weight: 600;
+    border-radius: 8px;
+    text-decoration: none;
+    transition: all 0.3s ease;
+}
+
+.home-links .home-link:hover {
+    transform: scale(1.05);
+}
+
+.home-links .btn-primary {
+    background-color: var(--primary-color);
+    border: none;
+    color: white;
+}
+
+.home-links .btn-outline-primary {
+    background-color: white;
+    border: 2px solid var(--primary-color);
+    color: var(--primary-color);
+}
+
+.home-links .btn-outline-primary:hover {
+    background-color: var(--primary-color);
+    color: white;
+}
+
+.features-section {
+    padding: 4rem 2rem;
+    background-color: var(--light-background);
+    flex-grow: 1; /* Pushes the footer down */
+}
+
+.features-section h2 {
+    font-size: 2.5rem;
+    color: var(--primary-color);
+    margin-bottom: 1.5rem;
+}
+
+.features-section p {
     font-size: 1.1rem;
-    transition: background 0.3s ease;
+    color: #555;
+    margin-bottom: 2rem;
 }
 
-.home-link:hover {
-    background: #6AB8E0;
+.feature-card {
+    background-color: white;
+    padding: 2rem;
+    border-radius: 8px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    margin-bottom: 2rem;
 }
 
-.home-link:active {
-    background: #559AC4;
+.feature-card h3 {
+    font-size: 1.5rem;
+    color: var(--primary-color);
+    margin-bottom: 1rem;
+}
+
+.feature-card p {
+    font-size: 1rem;
+    color: #666;
+}
+
+
+body {
+    margin: 0;
+}
+
+/* For smaller screens */
+@media (max-width: 768px) {
+    .hero-section {
+        padding: 4rem 1.5rem;
+    }
+
+    .hero-content h1 {
+        font-size: 2.5rem;
+    }
+
+    .hero-content p {
+        font-size: 1.1rem;
+    }
+
+    .features-section h2 {
+        font-size: 2rem;
+    }
+
+    .feature-card {
+        margin-bottom: 1.5rem;
+    }
 }
