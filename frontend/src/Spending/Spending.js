@@ -129,8 +129,8 @@ const Spending = () => {
 
     return (
         <div className="spending-container">
-            <h2>Spending</h2>
-            <h2>Add a Transaction below</h2>
+            <h2>Your Spending</h2>
+            <h3>Add a Transaction below</h3>
 
             {/* Form to Add a Transaction */}
             <div className="transaction-form">

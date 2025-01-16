@@ -1,87 +1,98 @@
+:root {
+    --primary-color: #4caf50;
+    --secondary-color: #81c784;
+    --accent-color: #66bb6a;
+    --card-bg: #ffffff;
+    --text-color: #333;
+    --light-gray: #f5f5f5;
+    --hover-color: #007bff;
+}
+
 .spending-container {
-    width: 80%;
+    max-width: 900px;
     margin: 20px auto;
     padding: 20px;
-    background-color: #f9f9f9;
-    border-radius: 10px;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    background-color: var(--light-gray);
+    border-radius: 12px;
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
 }
 
-h2 {
+h2, h3 {
     text-align: center;
-    font-size: 2rem;
-    color: #333;
-    margin-bottom: 20px;
+    color: var(--text-color);
 }
 
-.transaction-form {
+.transaction-form, .category-form {
     display: grid;
     gap: 15px;
-    max-width: 500px;
+    max-width: 600px;
     margin: 0 auto;
 }
 
 .input-field {
-    padding: 10px;
+    padding: 12px;
     font-size: 1rem;
-    border: 1px solid #ddd;
-    border-radius: 5px;
+    border: 1px solid var(--primary-color);
+    border-radius: 8px;
     width: 100%;
     box-sizing: border-box;
     transition: border-color 0.3s;
 }
 
 .input-field:focus {
-    border-color: #007bff;
+    border-color: var(--accent-color);
     outline: none;
 }
 
 .submit-button {
-    background-color: #28a745;
+    background-color: var(--primary-color);
     color: white;
-    padding: 10px 20px;
+    padding: 12px;
     font-size: 1rem;
     border: none;
-    border-radius: 5px;
+    border-radius: 8px;
     cursor: pointer;
     transition: background-color 0.3s;
-    margin-top: 15px;
-    width: 100%;
 }
 
 .submit-button:hover {
-    background-color: #218838;
+    background-color: var(--accent-color);
 }
 
 .transaction-list {
     margin-top: 30px;
 }
 
-.transaction-list h3 {
-    text-align: center;
-    font-size: 1.5rem;
-    color: #333;
-}
-
-ul {
+.transaction-list ul {
     list-style-type: none;
     padding: 0;
 }
 
 .transaction-item {
-    background-color: #fff;
-    border: 1px solid #ddd;
-    padding: 15px;
-    margin-bottom: 10px;
-    border-radius: 5px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    background-color: var(--card-bg);
+    border: 1px solid var(--light-gray);
+    padding: 20px;
+    margin-bottom: 15px;
+    border-radius: 8px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    transition: transform 0.2s ease;
+}
+
+.transaction-item:hover {
+    transform: translateY(-5px);
 }
 
 .transaction-detail {
     font-size: 1rem;
-    color: #555;
+    color: var(--text-color);
 }
 
 .transaction-detail strong {
-    color: #333;
+    color: var(--primary-color);
+}
+
+.tooltip-message {
+    font-size: 0.85rem;
+    color: var(--secondary-color);
+    margin-top: 8px;
 }
