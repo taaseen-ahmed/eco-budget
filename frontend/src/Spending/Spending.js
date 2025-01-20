@@ -14,6 +14,7 @@ const Spending = () => {
         description: ''
     });
     const [isPopupVisible, setPopupVisible] = useState(false);
+    const [isCategoryPopupVisible, setCategoryPopupVisible] = useState(false); // New state for category popup visibility
     const transactionTypes = ["Income", "Expense"];
 
     const fetchTransactions = useCallback(async () => {
@@ -99,6 +100,8 @@ const Spending = () => {
             });
             setCategories([...categories, response.data]);
             setNewCategory('');
+            setCategoryPopupVisible(false); // Close the category popup after adding
+            setPopupVisible(true); // Reopen the transaction popup
         } catch (error) {
             console.error('Error adding category:', error);
             alert('Failed to add category. Please try again.');
@@ -124,7 +127,38 @@ const Spending = () => {
                 Add Transaction
             </button>
 
-            {isPopupVisible && (
+            {isCategoryPopupVisible && (
+                <div className="popup">
+                    <div className="popup-card">
+                        <h3 className="popup-title">Add a New Category</h3>
+                        <form className="popup-form">
+                            <input
+                                type="text"
+                                value={newCategory}
+                                onChange={(e) => setNewCategory(e.target.value)}
+                                placeholder="New Category Name"
+                                className="input-field"
+                            />
+                            <button
+                                type="button"
+                                onClick={handleAddCategory}
+                                className="submit-button"
+                            >
+                                Add Category
+                            </button>
+                            <button
+                                type="button"
+                                onClick={() => setCategoryPopupVisible(false)}
+                                className="cancel-button"
+                            >
+                                Cancel
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            )}
+
+            {isPopupVisible && !isCategoryPopupVisible && (
                 <div className="popup">
                     <div className="popup-card">
                         <h3 className="popup-title">Add a Transaction</h3>
@@ -155,6 +189,13 @@ const Spending = () => {
                                     </option>
                                 ))}
                             </select>
+                            <button
+                                type="button"
+                                onClick={() => setCategoryPopupVisible(true)}
+                                className="add-category-button"
+                            >
+                                Add a New Category
+                            </button>
                             <select
                                 name="type"
                                 value={newTransaction.type}
@@ -183,23 +224,6 @@ const Spending = () => {
                                 placeholder="Description"
                                 className="input-field"
                             />
-                            <div className="category-form">
-                                <h4>Add a New Category</h4>
-                                <input
-                                    type="text"
-                                    value={newCategory}
-                                    onChange={(e) => setNewCategory(e.target.value)}
-                                    placeholder="New Category Name"
-                                    className="input-field"
-                                />
-                                <button
-                                    type="button"
-                                    onClick={handleAddCategory}
-                                    className="submit-button"
-                                >
-                                    Add Category
-                                </button>
-                            </div>
                             <div className="popup-buttons">
                                 <button type="button" onClick={handleAddTransaction} className="submit-button">
                                     Create
