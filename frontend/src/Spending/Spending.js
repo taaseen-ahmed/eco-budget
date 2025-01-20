@@ -17,6 +17,15 @@ const Spending = () => {
     const [isCategoryPopupVisible, setCategoryPopupVisible] = useState(false); // New state for category popup visibility
     const transactionTypes = ["Income", "Expense"];
 
+    // Calculate the current balance
+    const calculateBalance = () => {
+        return transactions.reduce((acc, transaction) => {
+            return transaction.type === "Income"
+                ? acc + parseFloat(transaction.amount)
+                : acc - parseFloat(transaction.amount);
+        }, 0).toFixed(2); // Balance is rounded to 2 decimal places
+    };
+
     const fetchTransactions = useCallback(async () => {
         try {
             const token = localStorage.getItem('jwtToken');
@@ -113,11 +122,17 @@ const Spending = () => {
         setNewTransaction({ ...newTransaction, [name]: value });
     };
 
+    const currentBalance = calculateBalance();
+    const balanceClass = currentBalance < 0 ? 'negative-balance' : 'positive-balance'; // Conditional class for balance
+
     return (
         <div className="spending-container">
             <div className="header">
                 <h2>Your Spending</h2>
                 <p>Track your income, expenses, and more with ease.</p>
+                <div className={`balance ${balanceClass}`}>
+                    <h3>Current Balance: ${currentBalance}</h3>
+                </div>
             </div>
 
             <button
@@ -250,11 +265,11 @@ const Spending = () => {
                         {transactions.map((transaction) => (
                             <li key={transaction.id} className="transaction-item">
                                 <div className="transaction-detail">
-                                    <strong>Amount:</strong> {transaction.amount} <br/>
-                                    <strong>Category:</strong> {transaction.category.name} <br/>
-                                    <strong>Type:</strong> {transaction.type} <br/>
-                                    <strong>Date:</strong> {new Date(transaction.date).toLocaleDateString()} <br/>
-                                    <strong>Description:</strong> {transaction.description} <br/>
+                                    <strong>Amount:</strong> {transaction.amount} <br />
+                                    <strong>Category:</strong> {transaction.category.name} <br />
+                                    <strong>Type:</strong> {transaction.type} <br />
+                                    <strong>Date:</strong> {new Date(transaction.date).toLocaleDateString()} <br />
+                                    <strong>Description:</strong> {transaction.description} <br />
                                     <strong>Carbon Footprint:</strong>{' '}
                                     {transaction.carbonFootprint !== null && transaction.carbonFootprint !== undefined
                                         ? `${transaction.carbonFootprint} kg CO2`

@@ -253,3 +253,11 @@
 .add-category-button:active {
     transform: scale(0.98);
 }
+
+.balance.negative-balance {
+    color: red;
+}
+
+.balance.positive-balance {
+    color: green;
+}
