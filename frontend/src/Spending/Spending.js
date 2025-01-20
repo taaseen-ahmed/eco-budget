@@ -13,10 +13,9 @@ const Spending = () => {
         date: '',
         description: ''
     });
-    const [hoveredTransactionId, setHoveredTransactionId] = useState(null);
+    const [isPopupVisible, setPopupVisible] = useState(false);
     const transactionTypes = ["Income", "Expense"];
 
-    // Fetch transactions and categories
     const fetchTransactions = useCallback(async () => {
         try {
             const token = localStorage.getItem('jwtToken');
@@ -77,6 +76,7 @@ const Spending = () => {
 
             setTransactions([...transactions, response.data]);
             setNewTransaction({ amount: '', category: '', type: '', date: '', description: '' });
+            setPopupVisible(false); // Close the popup
         } catch (error) {
             console.error('Error adding transaction:', error);
             alert('Failed to add transaction. Please try again.');
@@ -117,78 +117,106 @@ const Spending = () => {
                 <p>Track your income, expenses, and more with ease.</p>
             </div>
 
-            {/* Transaction Form Section */}
-            <div className="form-section">
-                <h3>Add a Transaction</h3>
-                <div className="transaction-form">
-                    <input
-                        type="number"
-                        name="amount"
-                        value={newTransaction.amount}
-                        onChange={handleChange}
-                        placeholder="Amount"
-                        className="input-field"
-                    />
-                    <select
-                        name="category"
-                        value={newTransaction.category ? newTransaction.category.id : ''}
-                        onChange={(e) => {
-                            const selectedCategory = categories.find(cat => cat.id === parseInt(e.target.value));
-                            setNewTransaction({ ...newTransaction, category: selectedCategory });
-                        }}
-                        className="input-field"
-                    >
-                        <option value="" disabled>Select a category</option>
-                        {categories.map((category) => (
-                            <option key={category.id} value={category.id}>{category.name}</option>
-                        ))}
-                    </select>
-                    <select
-                        name="type"
-                        value={newTransaction.type}
-                        onChange={handleChange}
-                        className="input-field"
-                    >
-                        <option value="" disabled>Select a type</option>
-                        {transactionTypes.map((type, index) => (
-                            <option key={index} value={type}>{type}</option>
-                        ))}
-                    </select>
-                    <input
-                        type="datetime-local"
-                        name="date"
-                        value={newTransaction.date}
-                        onChange={handleChange}
-                        className="input-field"
-                    />
-                    <input
-                        type="text"
-                        name="description"
-                        value={newTransaction.description}
-                        onChange={handleChange}
-                        placeholder="Description"
-                        className="input-field"
-                    />
-                    <button onClick={handleAddTransaction} className="submit-button">Add Transaction</button>
-                </div>
-            </div>
+            <button
+                onClick={() => setPopupVisible(true)}
+                className="add-transaction-button"
+            >
+                Add Transaction
+            </button>
 
-            {/* Category Form Section */}
-            <div className="form-section">
-                <h3>Add a New Category</h3>
-                <div className="category-form">
-                    <input
-                        type="text"
-                        value={newCategory}
-                        onChange={(e) => setNewCategory(e.target.value)}
-                        placeholder="New Category Name"
-                        className="input-field"
-                    />
-                    <button onClick={handleAddCategory} className="submit-button">Add Category</button>
+            {isPopupVisible && (
+                <div className="popup">
+                    <div className="popup-card">
+                        <h3 className="popup-title">Add a Transaction</h3>
+                        <form className="popup-form">
+                            <input
+                                type="number"
+                                name="amount"
+                                value={newTransaction.amount}
+                                onChange={handleChange}
+                                placeholder="Amount"
+                                className="input-field"
+                            />
+                            <select
+                                name="category"
+                                value={newTransaction.category ? newTransaction.category.id : ''}
+                                onChange={(e) => {
+                                    const selectedCategory = categories.find(
+                                        (cat) => cat.id === parseInt(e.target.value)
+                                    );
+                                    setNewTransaction({ ...newTransaction, category: selectedCategory });
+                                }}
+                                className="input-field"
+                            >
+                                <option value="" disabled>Select a category</option>
+                                {categories.map((category) => (
+                                    <option key={category.id} value={category.id}>
+                                        {category.name}
+                                    </option>
+                                ))}
+                            </select>
+                            <select
+                                name="type"
+                                value={newTransaction.type}
+                                onChange={handleChange}
+                                className="input-field"
+                            >
+                                <option value="" disabled>Select a type</option>
+                                {transactionTypes.map((type, index) => (
+                                    <option key={index} value={type}>
+                                        {type}
+                                    </option>
+                                ))}
+                            </select>
+                            <input
+                                type="datetime-local"
+                                name="date"
+                                value={newTransaction.date}
+                                onChange={handleChange}
+                                className="input-field"
+                            />
+                            <input
+                                type="text"
+                                name="description"
+                                value={newTransaction.description}
+                                onChange={handleChange}
+                                placeholder="Description"
+                                className="input-field"
+                            />
+                            <div className="category-form">
+                                <h4>Add a New Category</h4>
+                                <input
+                                    type="text"
+                                    value={newCategory}
+                                    onChange={(e) => setNewCategory(e.target.value)}
+                                    placeholder="New Category Name"
+                                    className="input-field"
+                                />
+                                <button
+                                    type="button"
+                                    onClick={handleAddCategory}
+                                    className="submit-button"
+                                >
+                                    Add Category
+                                </button>
+                            </div>
+                            <div className="popup-buttons">
+                                <button type="button" onClick={handleAddTransaction} className="submit-button">
+                                    Create
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={() => setPopupVisible(false)}
+                                    className="cancel-button"
+                                >
+                                    Cancel
+                                </button>
+                            </div>
+                        </form>
+                    </div>
                 </div>
-            </div>
+            )}
 
-            {/* Transactions List Section */}
             <div className="transaction-list">
                 <h3>Your Transactions</h3>
                 {transactions.length === 0 ? (
@@ -196,26 +224,17 @@ const Spending = () => {
                 ) : (
                     <ul>
                         {transactions.map((transaction) => (
-                            <li
-                                key={transaction.id}
-                                className="transaction-item"
-                                onMouseEnter={() => setHoveredTransactionId(transaction.id)}
-                                onMouseLeave={() => setHoveredTransactionId(null)}
-                            >
+                            <li key={transaction.id} className="transaction-item">
                                 <div className="transaction-detail">
-                                    <strong>Amount:</strong> {transaction.amount} <br />
-                                    <strong>Category:</strong> {transaction.category.name} <br />
-                                    <strong>Type:</strong> {transaction.type} <br />
-                                    <strong>Date:</strong> {new Date(transaction.date).toLocaleDateString()} <br />
-                                    <strong>Description:</strong> {transaction.description} <br />
-                                    <strong>Carbon Footprint:</strong> {transaction.carbonFootprint ?? 'Not Available'} kg CO2
-                                    {hoveredTransactionId === transaction.id && transaction.isChatGPTDerivedCarbonFootprint !== undefined && (
-                                        <p className="tooltip-message">
-                                            {transaction.isChatGPTDerivedCarbonFootprint
-                                                ? 'This carbon footprint was estimated using ChatGPT.'
-                                                : 'This carbon footprint was not estimated using ChatGPT.'}
-                                        </p>
-                                    )}
+                                    <strong>Amount:</strong> {transaction.amount} <br/>
+                                    <strong>Category:</strong> {transaction.category.name} <br/>
+                                    <strong>Type:</strong> {transaction.type} <br/>
+                                    <strong>Date:</strong> {new Date(transaction.date).toLocaleDateString()} <br/>
+                                    <strong>Description:</strong> {transaction.description} <br/>
+                                    <strong>Carbon Footprint:</strong>{' '}
+                                    {transaction.carbonFootprint !== null && transaction.carbonFootprint !== undefined
+                                        ? `${transaction.carbonFootprint} kg CO2`
+                                        : 'Not Available'}
                                 </div>
                             </li>
                         ))}
