@@ -67,6 +67,9 @@ public class TransactionService {
             transaction.setChatGPTDerivedCarbonFootprint(false);
         }
 
+        // Save the carbon multiplier used
+        transaction.setCarbonMultiplierUsed(carbonMultiplierUsed);
+
         // Save the new transaction
         Transaction savedTransaction = transactionRepository.save(transaction);
         TransactionDTO responseDTO = convertToDTO(savedTransaction);
@@ -106,6 +109,9 @@ public class TransactionService {
         Transaction existingTransaction = transactionRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Transaction not found with id: " + id));
 
+        // Check if the description has changed
+        boolean descriptionChanged = !transactionDTO.getDescription().equals(existingTransaction.getDescription());
+
         // Update the fields of the existing transaction
         existingTransaction.setAmount(transactionDTO.getAmount());
         existingTransaction.setType(transactionDTO.getType());
@@ -119,9 +125,38 @@ public class TransactionService {
             existingTransaction.setCategory(category);
         }
 
+        // Recalculate the carbon footprint
+        Double carbonMultiplierUsed = existingTransaction.getCarbonMultiplierUsed();
+        if (descriptionChanged) {
+            // Get ChatGPT-derived carbon multiplier based on new description
+            carbonMultiplierUsed = chatGPTService.getCarbonMultiplier(
+                    existingTransaction.getCategory().getName(),
+                    transactionDTO.getDescription()
+            );
+            existingTransaction.setChatGPTDerivedCarbonFootprint(true);
+        }
+
+        if (carbonMultiplierUsed != null) {
+            double chatGPTCarbonFootprint = transactionDTO.getAmount().doubleValue() * carbonMultiplierUsed;
+            existingTransaction.setCarbonFootprint(chatGPTCarbonFootprint);
+        } else if (existingTransaction.getCategory().getCarbonMultiplier() != null) {
+            double defaultCarbonFootprint = transactionDTO.getAmount().doubleValue() * existingTransaction.getCategory().getCarbonMultiplier();
+            existingTransaction.setCarbonFootprint(defaultCarbonFootprint);
+            existingTransaction.setChatGPTDerivedCarbonFootprint(false);
+            carbonMultiplierUsed = existingTransaction.getCategory().getCarbonMultiplier();
+        } else {
+            existingTransaction.setCarbonFootprint(null);
+            existingTransaction.setChatGPTDerivedCarbonFootprint(false);
+        }
+
+        // Save the carbon multiplier used
+        existingTransaction.setCarbonMultiplierUsed(carbonMultiplierUsed);
+
         // Save and return the updated transaction as a DTO
         Transaction updatedTransaction = transactionRepository.save(existingTransaction);
-        return convertToDTO(updatedTransaction);
+        TransactionDTO responseDTO = convertToDTO(updatedTransaction);
+        responseDTO.setCarbonMultiplierUsed(carbonMultiplierUsed); // Set the multiplier used
+        return responseDTO;
     }
 
     // Delete a transaction by ID

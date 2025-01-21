@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import { FaEdit, FaTrash } from 'react-icons/fa';
 import axios from 'axios';
 import './Spending.css';
 
@@ -16,6 +17,21 @@ const Spending = () => {
     const [isPopupVisible, setPopupVisible] = useState(false);
     const [isCategoryPopupVisible, setCategoryPopupVisible] = useState(false); // New state for category popup visibility
     const transactionTypes = ["Income", "Expense"];
+
+    const resetNewTransaction = () => {
+        setNewTransaction({
+            amount: '',
+            category: '',
+            type: '',
+            date: '',
+            description: ''
+        });
+    };
+
+    const handleAddTransactionClick = () => {
+        resetNewTransaction();
+        setPopupVisible(true);
+    };
 
     // Calculate the current balance
     const calculateBalance = () => {
@@ -80,16 +96,46 @@ const Spending = () => {
                 ...newTransaction,
                 category: { id: newTransaction.category.id },
             };
-            const response = await axios.post('/api/transaction', transactionToSend, {
-                headers: { Authorization: `Bearer ${token}` },
-            });
 
-            setTransactions([...transactions, response.data]);
+            if (newTransaction.id) {
+                // Update existing transaction
+                await axios.put(`/api/transaction/${newTransaction.id}`, transactionToSend, {
+                    headers: { Authorization: `Bearer ${token}` },
+                });
+            } else {
+                // Add new transaction
+                const response = await axios.post('/api/transaction', transactionToSend, {
+                    headers: { Authorization: `Bearer ${token}` },
+                });
+                setTransactions([...transactions, response.data]);
+            }
+
             setNewTransaction({ amount: '', category: '', type: '', date: '', description: '' });
             setPopupVisible(false); // Close the popup
+            fetchTransactions(); // Fetch all transactions again
         } catch (error) {
-            console.error('Error adding transaction:', error);
-            alert('Failed to add transaction. Please try again.');
+            console.error('Error adding/updating transaction:', error);
+            alert('Failed to add/update transaction. Please try again.');
+        }
+    };
+
+    const handleEditTransaction = (transaction) => {
+        setNewTransaction(transaction);
+        setPopupVisible(true);
+    };
+
+    const handleDeleteTransaction = async (transactionId) => {
+        if (window.confirm('Are you sure you want to delete this transaction?')) {
+            try {
+                const token = localStorage.getItem('jwtToken');
+                await axios.delete(`/api/transaction/${transactionId}`, {
+                    headers: { Authorization: `Bearer ${token}` },
+                });
+                setTransactions(transactions.filter((transaction) => transaction.id !== transactionId));
+            } catch (error) {
+                console.error('Error deleting transaction:', error);
+                alert('Failed to delete transaction. Please try again.');
+            }
         }
     };
 
@@ -136,7 +182,7 @@ const Spending = () => {
             </div>
 
             <button
-                onClick={() => setPopupVisible(true)}
+                onClick={handleAddTransactionClick}
                 className="add-transaction-button"
             >
                 Add Transaction
@@ -193,7 +239,7 @@ const Spending = () => {
                                     const selectedCategory = categories.find(
                                         (cat) => cat.id === parseInt(e.target.value)
                                     );
-                                    setNewTransaction({ ...newTransaction, category: selectedCategory });
+                                    setNewTransaction({...newTransaction, category: selectedCategory});
                                 }}
                                 className="input-field"
                             >
@@ -241,7 +287,7 @@ const Spending = () => {
                             />
                             <div className="popup-buttons">
                                 <button type="button" onClick={handleAddTransaction} className="submit-button">
-                                    Create
+                                    {newTransaction.id ? 'Edit' : 'Create'}
                                 </button>
                                 <button
                                     type="button"
@@ -265,15 +311,24 @@ const Spending = () => {
                         {transactions.map((transaction) => (
                             <li key={transaction.id} className="transaction-item">
                                 <div className="transaction-detail">
-                                    <strong>Amount:</strong> {transaction.amount} <br />
-                                    <strong>Category:</strong> {transaction.category.name} <br />
-                                    <strong>Type:</strong> {transaction.type} <br />
-                                    <strong>Date:</strong> {new Date(transaction.date).toLocaleDateString()} <br />
-                                    <strong>Description:</strong> {transaction.description} <br />
+                                    <strong>Amount:</strong> {transaction.amount} <br/>
+                                    <strong>Category:</strong> {transaction.category.name} <br/>
+                                    <strong>Type:</strong> {transaction.type} <br/>
+                                    <strong>Date:</strong> {new Date(transaction.date).toLocaleDateString()} <br/>
+                                    <strong>Description:</strong> {transaction.description} <br/>
                                     <strong>Carbon Footprint:</strong>{' '}
                                     {transaction.carbonFootprint !== null && transaction.carbonFootprint !== undefined
                                         ? `${transaction.carbonFootprint} kg CO2`
                                         : 'Not Available'}
+                                </div>
+                                <div className="transaction-actions">
+                                    <button onClick={() => handleEditTransaction(transaction)} className="edit-button">
+                                        <FaEdit/> Edit
+                                    </button>
+                                    <button onClick={() => handleDeleteTransaction(transaction.id)}
+                                            className="delete-button">
+                                        <FaTrash/> Delete
+                                    </button>
                                 </div>
                             </li>
                         ))}
