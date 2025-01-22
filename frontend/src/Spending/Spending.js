@@ -17,6 +17,9 @@ const Spending = () => {
     const [isPopupVisible, setPopupVisible] = useState(false);
     const [isCategoryPopupVisible, setCategoryPopupVisible] = useState(false); // New state for category popup visibility
     const transactionTypes = ["Income", "Expense"];
+    const [searchQuery, setSearchQuery] = useState('');
+    const [filterType, setFilterType] = useState('');
+    const [filterCategory, setFilterCategory] = useState('');
 
     const resetNewTransaction = () => {
         setNewTransaction({
@@ -168,6 +171,13 @@ const Spending = () => {
         setNewTransaction({ ...newTransaction, [name]: value });
     };
 
+    const filteredTransactions = transactions.filter((transaction) => {
+        const matchesSearchQuery = transaction.description.toLowerCase().includes(searchQuery.toLowerCase());
+        const matchesFilterType = filterType ? transaction.type === filterType : true;
+        const matchesFilterCategory = filterCategory ? transaction.category.name === filterCategory : true;
+        return matchesSearchQuery && matchesFilterType && matchesFilterCategory;
+    });
+
     const currentBalance = calculateBalance();
     const balanceClass = currentBalance < 0 ? 'negative-balance' : 'positive-balance'; // Conditional class for balance
 
@@ -187,6 +197,40 @@ const Spending = () => {
             >
                 Add Transaction
             </button>
+
+            <div className="filters">
+                <input
+                    type="text"
+                    placeholder="Search transactions..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="search-bar"
+                />
+                <select
+                    value={filterType}
+                    onChange={(e) => setFilterType(e.target.value)}
+                    className="filter-dropdown"
+                >
+                    <option value="">All Types</option>
+                    {transactionTypes.map((type, index) => (
+                        <option key={index} value={type}>
+                            {type}
+                        </option>
+                    ))}
+                </select>
+                <select
+                    value={filterCategory}
+                    onChange={(e) => setFilterCategory(e.target.value)}
+                    className="filter-dropdown"
+                >
+                    <option value="">All Categories</option>
+                    {categories.map((category) => (
+                        <option key={category.id} value={category.name}>
+                            {category.name}
+                        </option>
+                    ))}
+                </select>
+            </div>
 
             {isCategoryPopupVisible && (
                 <div className="popup">
@@ -304,11 +348,11 @@ const Spending = () => {
 
             <div className="transaction-list">
                 <h3>Your Transactions</h3>
-                {transactions.length === 0 ? (
+                {filteredTransactions.length === 0 ? (
                     <p>No transactions found.</p>
                 ) : (
                     <ul>
-                        {transactions.map((transaction) => (
+                        {filteredTransactions.map((transaction) => (
                             <li key={transaction.id} className="transaction-item">
                                 <div className="transaction-detail">
                                     <strong>Amount:</strong> {transaction.amount} <br/>

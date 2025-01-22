@@ -292,3 +292,47 @@
 .delete-button:hover {
     background-color: #e53935;
 }
+
+/* Spending.css */
+
+/* Styling for the filters container */
+.filters {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 20px;
+}
+
+/* Styling for the search bar */
+.search-bar {
+    padding: 12px;
+    font-size: 1rem;
+    border: 1px solid var(--primary-color);
+    border-radius: 8px;
+    width: 100%;
+    box-sizing: border-box;
+    transition: border-color 0.3s, box-shadow 0.3s;
+}
+
+.search-bar:focus {
+    border-color: var(--accent-color);
+    box-shadow: 0 0 8px rgba(102, 187, 106, 0.5);
+    outline: none;
+}
+
+/* Styling for the filter dropdowns */
+.filter-dropdown {
+    padding: 12px;
+    font-size: 1rem;
+    border: 1px solid var(--primary-color);
+    border-radius: 8px;
+    width: 100%;
+    box-sizing: border-box;
+    background-color: #fff;
+    transition: border-color 0.3s, box-shadow 0.3s;
+}
+
+.filter-dropdown:focus {
+    border-color: var(--accent-color);
+    box-shadow: 0 0 8px rgba(102, 187, 106, 0.5);
+    outline: none;
+}
