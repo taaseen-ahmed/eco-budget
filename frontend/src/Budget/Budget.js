@@ -1,7 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { Pie } from 'react-chartjs-2';
-import 'chart.js/auto';
 import './Budget.css';
 
 const Budget = () => {
@@ -85,19 +83,6 @@ const Budget = () => {
             console.error('Error adding budget:', error);
             setAlertMessage('Failed to add budget. Please try again.');
         }
-    };
-
-    const getChartData = (budget) => {
-        return {
-            labels: ['Used', 'Remaining'],
-            datasets: [
-                {
-                    data: [budget.totalSpent, budget.amount - budget.totalSpent],
-                    backgroundColor: ['#FF6384', '#36A2EB'],
-                    hoverBackgroundColor: ['#FF6384', '#36A2EB']
-                }
-            ]
-        };
     };
 
     return (
@@ -187,9 +172,9 @@ const Budget = () => {
                                     <strong>Amount:</strong> £{budget.amount} <br/>
                                     <strong>Category:</strong> {budget.categoryName || 'No category'} <br/>
                                     <strong>Total Spent:</strong> £{budget.totalSpent} <br/>
-                                </div>
-                                <div className="pie-chart-container">
-                                    <Pie data={getChartData(budget)} />
+                                    <div className="progress-bar-container">
+                                        <progress value={budget.totalSpent} max={budget.amount}></progress>
+                                    </div>
                                 </div>
                             </li>
                         ))}
