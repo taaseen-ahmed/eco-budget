@@ -44,8 +44,8 @@ const Budget = () => {
             }
         };
 
-        fetchCategories();
-        fetchBudgets();
+        fetchCategories().catch(console.error);
+        fetchBudgets().catch(console.error);
     }, []);
 
     const handleAddBudgetClick = () => {
@@ -134,6 +134,46 @@ const Budget = () => {
         const matchesFilterCategory = filterCategory ? budget.categoryId === parseInt(filterCategory) : true;
         return matchesSearchQuery && matchesFilterCategory;
     });
+
+    const currentBudgets = filteredBudgets.filter(budget => new Date(budget.endDate) >= new Date());
+    const pastBudgets = filteredBudgets.filter(budget => new Date(budget.endDate) < new Date());
+
+    const BudgetList = ({ title, budgets }) => (
+        <div className="budgets-list">
+            <h3>{title}</h3>
+            {budgets.length === 0 ? (
+                <p className="empty-state">No {title.toLowerCase()} found.</p>
+            ) : (
+                <ul>
+                    {budgets.map((budget) => (
+                        <li key={budget.id} className="budget-item">
+                            <div className="budget-detail">
+                                <strong>Budget Amount:</strong> £{budget.amount} <br/>
+                                <strong>Category:</strong> {budget.categoryName || 'No category'} <br/>
+                                <strong>Total Spent:</strong> £{budget.totalSpent} <br/>
+                                <strong>Period:</strong> {new Date(budget.startDate).toLocaleDateString()} - {new Date(budget.endDate).toLocaleDateString()} <br/>
+                                {budget.totalSpent > budget.amount && (
+                                    <div className="budget-exceeded">Budget Exceeded!</div>
+                                )}
+                                <div className="progress-bar-container">
+                                    <progress value={budget.totalSpent} max={budget.amount}></progress>
+                                </div>
+                            </div>
+                            <div className="budget-actions">
+                                <button onClick={() => handleEditBudgetClick(budget)} className="edit-button">
+                                    <FaEdit/> Edit
+                                </button>
+                                <button onClick={() => handleDeleteBudget(budget.id)}
+                                        className="delete-button">
+                                    <FaTrash/> Delete
+                                </button>
+                            </div>
+                        </li>
+                    ))}
+                </ul>
+            )}
+        </div>
+    );
 
     return (
         <div className="budget-container">
@@ -232,40 +272,8 @@ const Budget = () => {
                 </div>
             )}
 
-            <div className="budgets-list">
-                <h3>Your Budgets</h3>
-                {filteredBudgets.length === 0 ? (
-                    <p className="empty-state">No budgets found.</p>
-                ) : (
-                    <ul>
-                        {filteredBudgets.map((budget) => (
-                            <li key={budget.id} className="budget-item">
-                                <div className="budget-detail">
-                                    <strong>Budget Amount:</strong> £{budget.amount} <br/>
-                                    <strong>Category:</strong> {budget.categoryName || 'No category'} <br/>
-                                    <strong>Total Spent:</strong> £{budget.totalSpent} <br/>
-                                    {budget.totalSpent > budget.amount && (
-                                        <div className="budget-exceeded">Budget Exceeded!</div>
-                                    )}
-                                    <div className="progress-bar-container">
-                                        <progress value={budget.totalSpent} max={budget.amount}></progress>
-                                    </div>
-                                </div>
-                                <div className="budget-actions">
-                                    <button onClick={() => handleEditBudgetClick(budget)} className="edit-button">
-                                        <FaEdit/> Edit
-                                    </button>
-                                    <button onClick={() => handleDeleteBudget(budget.id)}
-                                            className="delete-button">
-                                        <FaTrash/> Delete
-                                    </button>
-                                </div>
-
-                            </li>
-                        ))}
-                    </ul>
-                )}
-            </div>
+            <BudgetList title="Your Current Budgets" budgets={currentBudgets} />
+            <BudgetList title="Past Budgets" budgets={pastBudgets} />
         </div>
     );
 };
