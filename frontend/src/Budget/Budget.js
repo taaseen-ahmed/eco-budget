@@ -16,6 +16,8 @@ const Budget = () => {
     const [isPopupVisible, setPopupVisible] = useState(false);
     const [isEditMode, setEditMode] = useState(false);
     const [currentBudgetId, setCurrentBudgetId] = useState(null);
+    const [searchQuery, setSearchQuery] = useState('');
+    const [filterCategory, setFilterCategory] = useState('');
 
     useEffect(() => {
         const fetchCategories = async () => {
@@ -127,6 +129,12 @@ const Budget = () => {
         }
     };
 
+    const filteredBudgets = budgets.filter(budget => {
+        const matchesSearchQuery = budget.categoryName.toLowerCase().includes(searchQuery.toLowerCase());
+        const matchesFilterCategory = filterCategory ? budget.categoryId === parseInt(filterCategory) : true;
+        return matchesSearchQuery && matchesFilterCategory;
+    });
+
     return (
         <div className="budget-container">
             <div className="header">
@@ -137,6 +145,28 @@ const Budget = () => {
             <button onClick={handleAddBudgetClick} className="add-budget-button">
                 Add Budget
             </button>
+
+            <div className="filters">
+                <input
+                    type="text"
+                    placeholder="Search budgets..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="search-bar"
+                />
+                <select
+                    value={filterCategory}
+                    onChange={(e) => setFilterCategory(e.target.value)}
+                    className="filter-dropdown"
+                >
+                    <option value="">All Categories</option>
+                    {categories.map((category) => (
+                        <option key={category.id} value={category.id}>
+                            {category.name}
+                        </option>
+                    ))}
+                </select>
+            </div>
 
             {isPopupVisible && (
                 <div className="popup">
@@ -204,11 +234,11 @@ const Budget = () => {
 
             <div className="budgets-list">
                 <h3>Your Budgets</h3>
-                {budgets.length === 0 ? (
+                {filteredBudgets.length === 0 ? (
                     <p className="empty-state">No budgets found.</p>
                 ) : (
                     <ul>
-                        {budgets.map((budget) => (
+                        {filteredBudgets.map((budget) => (
                             <li key={budget.id} className="budget-item">
                                 <div className="budget-detail">
                                     <strong>Budget Amount:</strong> £{budget.amount} <br/>

@@ -271,6 +271,24 @@ progress::-moz-progress-bar {
     background-color: #e53935;
 }
 
+.search-bar,
+.filter-dropdown {
+    padding: 12px;
+    font-size: 1rem;
+    border: 1px solid var(--primary-color);
+    border-radius: 8px;
+    width: 100%;
+    box-sizing: border-box;
+    transition: border-color 0.3s, box-shadow 0.3s;
+}
+
+.search-bar:focus,
+.filter-dropdown:focus {
+    border-color: var(--accent-color);
+    box-shadow: 0 0 8px rgba(102, 187, 106, 0.5);
+    outline: none;
+}
+
 @keyframes fadeIn {
     from {
         opacity: 0;
