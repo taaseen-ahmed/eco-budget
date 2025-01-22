@@ -225,6 +225,12 @@ progress::-moz-progress-bar {
     background-color: var(--primary-color);
 }
 
+.budget-exceeded {
+    color: red;
+    font-weight: bold;
+    margin-top: 10px;
+}
+
 .empty-state {
     font-size: 1.2rem;
     color: #888;

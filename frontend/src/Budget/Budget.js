@@ -172,6 +172,9 @@ const Budget = () => {
                                     <strong>Amount:</strong> £{budget.amount} <br/>
                                     <strong>Category:</strong> {budget.categoryName || 'No category'} <br/>
                                     <strong>Total Spent:</strong> £{budget.totalSpent} <br/>
+                                    {budget.totalSpent > budget.amount && (
+                                        <div className="budget-exceeded">Budget Exceeded!</div>
+                                    )}
                                     <div className="progress-bar-container">
                                         <progress value={budget.totalSpent} max={budget.amount}></progress>
                                     </div>
