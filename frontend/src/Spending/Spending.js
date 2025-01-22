@@ -178,6 +178,9 @@ const Spending = () => {
         return matchesSearchQuery && matchesFilterType && matchesFilterCategory;
     });
 
+    // Sort the filtered transactions by date in descending order
+    const sortedTransactions = filteredTransactions.sort((a, b) => new Date(b.date) - new Date(a.date));
+
     const currentBalance = calculateBalance();
     const balanceClass = currentBalance < 0 ? 'negative-balance' : 'positive-balance'; // Conditional class for balance
 
@@ -348,11 +351,11 @@ const Spending = () => {
 
             <div className="transaction-list">
                 <h3>Your Transactions</h3>
-                {filteredTransactions.length === 0 ? (
+                {sortedTransactions.length === 0 ? (
                     <p>No transactions found.</p>
                 ) : (
                     <ul>
-                        {filteredTransactions.map((transaction) => (
+                        {sortedTransactions.map((transaction) => (
                             <li key={transaction.id} className="transaction-item">
                                 <div className="transaction-detail">
                                     <strong>Amount:</strong> {transaction.amount} <br/>
