@@ -14,6 +14,7 @@ const Budget = () => {
         endDate: ''
     });
     const [alertMessage, setAlertMessage] = useState('');
+    const [isPopupVisible, setPopupVisible] = useState(false);
 
     useEffect(() => {
         const fetchCategories = async () => {
@@ -44,6 +45,14 @@ const Budget = () => {
         fetchBudgets();
     }, []);
 
+    const handleAddBudgetClick = () => {
+        setPopupVisible(true);
+    };
+
+    const handleClosePopup = () => {
+        setPopupVisible(false);
+    };
+
     const handleAddBudget = async () => {
         if (!newBudget.category || !newBudget.amount || !newBudget.startDate || !newBudget.endDate) {
             setAlertMessage('Please fill in all fields.');
@@ -71,6 +80,7 @@ const Budget = () => {
                 endDate: ''
             });
             setAlertMessage('');
+            setPopupVisible(false);
         } catch (error) {
             console.error('Error adding budget:', error);
             setAlertMessage('Failed to add budget. Please try again.');
@@ -91,59 +101,80 @@ const Budget = () => {
     };
 
     return (
-        <div className="container">
-            <h2>Budget</h2>
-
-            <div className="budget-form-container">
-                <div className="budget-form">
-                    <input
-                        type="number"
-                        placeholder="Amount"
-                        value={newBudget.amount}
-                        onChange={(e) => setNewBudget({ ...newBudget, amount: e.target.value })}
-                    />
-
-                    <input
-                        type="date"
-                        placeholder="Start Date"
-                        value={newBudget.startDate}
-                        onChange={(e) => setNewBudget({ ...newBudget, startDate: e.target.value })}
-                    />
-
-                    <input
-                        type="date"
-                        placeholder="End Date"
-                        value={newBudget.endDate}
-                        onChange={(e) => setNewBudget({ ...newBudget, endDate: e.target.value })}
-                    />
-
-                    {/* Category Dropdown */}
-                    <select
-                        value={newBudget.category ? newBudget.category.id : ''}
-                        onChange={(e) => {
-                            const selectedCategory = categories.find(
-                                (cat) => cat.id === parseInt(e.target.value)
-                            );
-                            setNewBudget({ ...newBudget, category: selectedCategory });
-                        }}
-                    >
-                        <option value="" disabled>
-                            Select a category
-                        </option>
-                        {categories.map((category) => (
-                            <option key={category.id} value={category.id}>
-                                {category.name}
-                            </option>
-                        ))}
-                    </select>
-
-                    <button onClick={handleAddBudget}>Add Budget</button>
-
-                    {alertMessage && <div className="alert">{alertMessage}</div>}
-                </div>
+        <div className="budget-container">
+            <div className="header">
+                <h2>Your Budget</h2>
+                <p>Manage your budgets effectively by setting limits for different categories and tracking your spending.</p>
             </div>
 
-            {/* Display Budgets */}
+            <button onClick={handleAddBudgetClick} className="add-budget-button">
+                Add Budget
+            </button>
+
+            {isPopupVisible && (
+                <div className="popup">
+                    <div className="popup-card">
+                        <h3 className="popup-title">Add a Budget</h3>
+                        <form className="popup-form">
+                            <input
+                                type="number"
+                                placeholder="Amount"
+                                value={newBudget.amount}
+                                onChange={(e) => setNewBudget({ ...newBudget, amount: e.target.value })}
+                                className="input-field"
+                            />
+
+                            <input
+                                type="date"
+                                placeholder="Start Date"
+                                value={newBudget.startDate}
+                                onChange={(e) => setNewBudget({ ...newBudget, startDate: e.target.value })}
+                                className="input-field"
+                            />
+
+                            <input
+                                type="date"
+                                placeholder="End Date"
+                                value={newBudget.endDate}
+                                onChange={(e) => setNewBudget({ ...newBudget, endDate: e.target.value })}
+                                className="input-field"
+                            />
+
+                            <select
+                                value={newBudget.category ? newBudget.category.id : ''}
+                                onChange={(e) => {
+                                    const selectedCategory = categories.find(
+                                        (cat) => cat.id === parseInt(e.target.value)
+                                    );
+                                    setNewBudget({ ...newBudget, category: selectedCategory });
+                                }}
+                                className="input-field"
+                            >
+                                <option value="" disabled>
+                                    Select a category
+                                </option>
+                                {categories.map((category) => (
+                                    <option key={category.id} value={category.id}>
+                                        {category.name}
+                                    </option>
+                                ))}
+                            </select>
+
+                            <div className="popup-buttons">
+                                <button type="button" onClick={handleAddBudget} className="submit-button">
+                                    Add Budget
+                                </button>
+                                <button type="button" onClick={handleClosePopup} className="cancel-button">
+                                    Cancel
+                                </button>
+                            </div>
+
+                            {alertMessage && <div className="alert">{alertMessage}</div>}
+                        </form>
+                    </div>
+                </div>
+            )}
+
             <div className="budgets-list">
                 <h3>Your Budgets</h3>
                 {budgets.length === 0 ? (
@@ -151,10 +182,12 @@ const Budget = () => {
                 ) : (
                     <ul>
                         {budgets.map((budget) => (
-                            <li key={budget.id}>
-                                <p>Amount: £{budget.amount}</p>
-                                <p>Category: {budget.categoryName || 'No category'}</p>
-                                <p>Total Spent: £{budget.totalSpent}</p>
+                            <li key={budget.id} className="budget-item">
+                                <div className="budget-detail">
+                                    <strong>Amount:</strong> £{budget.amount} <br/>
+                                    <strong>Category:</strong> {budget.categoryName || 'No category'} <br/>
+                                    <strong>Total Spent:</strong> £{budget.totalSpent} <br/>
+                                </div>
                                 <div className="pie-chart-container">
                                     <Pie data={getChartData(budget)} />
                                 </div>
