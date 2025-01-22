@@ -190,7 +190,7 @@ const Spending = () => {
                 <h2>Your Spending</h2>
                 <p>Track your income, expenses, and more with ease.</p>
                 <div className={`balance ${balanceClass}`}>
-                    <h3>Current Balance: ${currentBalance}</h3>
+                    <h3>Current Balance: £{currentBalance}</h3>
                 </div>
             </div>
 

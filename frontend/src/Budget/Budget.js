@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { FaEdit, FaTrash } from 'react-icons/fa';
 import axios from 'axios';
 import './Budget.css';
 
@@ -13,6 +14,8 @@ const Budget = () => {
     });
     const [alertMessage, setAlertMessage] = useState('');
     const [isPopupVisible, setPopupVisible] = useState(false);
+    const [isEditMode, setEditMode] = useState(false);
+    const [currentBudgetId, setCurrentBudgetId] = useState(null);
 
     useEffect(() => {
         const fetchCategories = async () => {
@@ -44,6 +47,25 @@ const Budget = () => {
     }, []);
 
     const handleAddBudgetClick = () => {
+        setNewBudget({
+            amount: '',
+            category: null,
+            startDate: '',
+            endDate: ''
+        });
+        setEditMode(false);
+        setPopupVisible(true);
+    };
+
+    const handleEditBudgetClick = (budget) => {
+        setNewBudget({
+            amount: budget.amount,
+            category: categories.find(cat => cat.id === budget.categoryId),
+            startDate: budget.startDate.split('T')[0],
+            endDate: budget.endDate.split('T')[0]
+        });
+        setCurrentBudgetId(budget.id);
+        setEditMode(true);
         setPopupVisible(true);
     };
 
@@ -51,7 +73,7 @@ const Budget = () => {
         setPopupVisible(false);
     };
 
-    const handleAddBudget = async () => {
+    const handleAddOrEditBudget = async () => {
         if (!newBudget.category || !newBudget.amount || !newBudget.startDate || !newBudget.endDate) {
             setAlertMessage('Please fill in all fields.');
             return;
@@ -66,11 +88,18 @@ const Budget = () => {
                 endDate: `${newBudget.endDate}T23:59:59`
             };
 
-            const response = await axios.post('/api/budgets/create', budgetToSend, {
-                headers: { Authorization: `Bearer ${token}` },
-            });
+            if (isEditMode) {
+                await axios.put(`/api/budgets/${currentBudgetId}`, budgetToSend, {
+                    headers: { Authorization: `Bearer ${token}` },
+                });
+                setBudgets(budgets.map(budget => budget.id === currentBudgetId ? { ...budget, ...budgetToSend } : budget));
+            } else {
+                const response = await axios.post('/api/budgets/create', budgetToSend, {
+                    headers: { Authorization: `Bearer ${token}` },
+                });
+                setBudgets([...budgets, response.data]);
+            }
 
-            setBudgets([...budgets, response.data]);
             setNewBudget({
                 amount: '',
                 category: null,
@@ -80,8 +109,21 @@ const Budget = () => {
             setAlertMessage('');
             setPopupVisible(false);
         } catch (error) {
-            console.error('Error adding budget:', error);
-            setAlertMessage('Failed to add budget. Please try again.');
+            console.error('Error adding or editing budget:', error);
+            setAlertMessage('Failed to add or edit budget. Please try again.');
+        }
+    };
+
+    const handleDeleteBudget = async (budgetId) => {
+        try {
+            const token = localStorage.getItem('jwtToken');
+            await axios.delete(`/api/budgets/${budgetId}`, {
+                headers: { Authorization: `Bearer ${token}` },
+            });
+            setBudgets(budgets.filter(budget => budget.id !== budgetId));
+        } catch (error) {
+            console.error('Error deleting budget:', error);
+            setAlertMessage('Failed to delete budget. Please try again.');
         }
     };
 
@@ -99,7 +141,7 @@ const Budget = () => {
             {isPopupVisible && (
                 <div className="popup">
                     <div className="popup-card">
-                        <h3 className="popup-title">Add a Budget</h3>
+                        <h3 className="popup-title">{isEditMode ? 'Edit Budget' : 'Add a Budget'}</h3>
                         <form className="popup-form">
                             <input
                                 type="number"
@@ -146,8 +188,8 @@ const Budget = () => {
                             </select>
 
                             <div className="popup-buttons">
-                                <button type="button" onClick={handleAddBudget} className="submit-button">
-                                    Add Budget
+                                <button type="button" onClick={handleAddOrEditBudget} className="submit-button">
+                                    {isEditMode ? 'Save Changes' : 'Add Budget'}
                                 </button>
                                 <button type="button" onClick={handleClosePopup} className="cancel-button">
                                     Cancel
@@ -169,7 +211,7 @@ const Budget = () => {
                         {budgets.map((budget) => (
                             <li key={budget.id} className="budget-item">
                                 <div className="budget-detail">
-                                    <strong>Amount:</strong> £{budget.amount} <br/>
+                                    <strong>Budget Amount:</strong> £{budget.amount} <br/>
                                     <strong>Category:</strong> {budget.categoryName || 'No category'} <br/>
                                     <strong>Total Spent:</strong> £{budget.totalSpent} <br/>
                                     {budget.totalSpent > budget.amount && (
@@ -179,6 +221,16 @@ const Budget = () => {
                                         <progress value={budget.totalSpent} max={budget.amount}></progress>
                                     </div>
                                 </div>
+                                <div className="budget-actions">
+                                    <button onClick={() => handleEditBudgetClick(budget)} className="edit-button">
+                                        <FaEdit/> Edit
+                                    </button>
+                                    <button onClick={() => handleDeleteBudget(budget.id)}
+                                            className="delete-button">
+                                        <FaTrash/> Delete
+                                    </button>
+                                </div>
+
                             </li>
                         ))}
                     </ul>
