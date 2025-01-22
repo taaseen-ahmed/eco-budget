@@ -196,14 +196,19 @@ const Spending = () => {
 
     const prepareChartData = (transactions) => {
         const data = {};
+        let cumulativeTotal = 0;
 
-        transactions.forEach(transaction => {
-            const date = new Date(transaction.date).toLocaleDateString();
-            if (!data[date]) {
-                data[date] = 0;
-            }
-            data[date] += parseFloat(transaction.amount);
-        });
+        transactions
+            .filter(transaction => transaction.type === "Expense") // Only include expense transactions
+            .sort((a, b) => new Date(a.date) - new Date(b.date)) // Sort transactions by date
+            .forEach(transaction => {
+                const date = new Date(transaction.date).toLocaleDateString();
+                if (!data[date]) {
+                    data[date] = 0;
+                }
+                cumulativeTotal += parseFloat(transaction.amount);
+                data[date] = cumulativeTotal;
+            });
 
         return Object.keys(data).map(date => ({ date, amount: data[date] }));
     };
@@ -221,73 +226,130 @@ const Spending = () => {
     const currentBalance = calculateBalance();
     const balanceClass = currentBalance < 0 ? 'negative-balance' : 'positive-balance'; // Conditional class for balance
 
+    const calculateTotalExpense = (transactions) => {
+        return transactions
+            .filter(transaction => transaction.type === "Expense")
+            .reduce((total, transaction) => total + parseFloat(transaction.amount), 0)
+            .toFixed(2);
+    };
+
+    const filteredTransactionsByPeriod = filterTransactionsByPeriod(transactions, selectedPeriod);
+    const totalExpense = calculateTotalExpense(filteredTransactionsByPeriod);
+
     return (
         <div className="spending-container">
-            <div className="header">
-                <h2>Your Spending</h2>
-                <p>Track your income, expenses, and more with ease.</p>
-                <div className={`balance ${balanceClass}`}>
-                    <h3>Current Balance: £{currentBalance}</h3>
+            <div className="left-container">
+                <div className="header">
+                    <h2>Your Spending</h2>
+                    <p>Track your income, expenses, and more with ease.</p>
+                </div>
+
+                <button onClick={handleAddTransactionClick} className="add-transaction-button">
+                    Add Transaction
+                </button>
+
+                <div className="filters">
+                    <input
+                        type="text"
+                        placeholder="Search transactions..."
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        className="search-bar"
+                    />
+                    <select
+                        value={filterType}
+                        onChange={(e) => setFilterType(e.target.value)}
+                        className="filter-dropdown"
+                    >
+                        <option value="">All Types</option>
+                        {transactionTypes.map((type, index) => (
+                            <option key={index} value={type}>
+                                {type}
+                            </option>
+                        ))}
+                    </select>
+                    <select
+                        value={filterCategory}
+                        onChange={(e) => setFilterCategory(e.target.value)}
+                        className="filter-dropdown"
+                    >
+                        <option value="">All Categories</option>
+                        {categories.map((category) => (
+                            <option key={category.id} value={category.name}>
+                                {category.name}
+                            </option>
+                        ))}
+                    </select>
+                </div>
+
+                <div className="transaction-list">
+                    <h3>Your Transactions</h3>
+                    {sortedTransactions.length === 0 ? (
+                        <p>No transactions found.</p>
+                    ) : (
+                        <ul>
+                            {sortedTransactions.map((transaction) => (
+                                <li key={transaction.id} className="transaction-item">
+                                    <div className="transaction-detail">
+                                        <strong>Amount:</strong> {transaction.amount} <br/>
+                                        <strong>Category:</strong> {transaction.category.name} <br/>
+                                        <strong>Type:</strong> {transaction.type} <br/>
+                                        <strong>Date:</strong> {new Date(transaction.date).toLocaleDateString()} <br/>
+                                        <strong>Description:</strong> {transaction.description} <br/>
+                                        <strong>Carbon Footprint:</strong>{' '}
+                                        {transaction.carbonFootprint !== null && transaction.carbonFootprint !== undefined
+                                            ? `${transaction.carbonFootprint} kg CO2`
+                                            : 'Not Available'}
+                                    </div>
+                                    <div className="transaction-actions">
+                                        <button onClick={() => handleEditTransaction(transaction)}
+                                                className="edit-button">
+                                            <FaEdit/> Edit
+                                        </button>
+                                        <button onClick={() => handleDeleteTransaction(transaction.id)}
+                                                className="delete-button">
+                                            <FaTrash/> Delete
+                                        </button>
+                                    </div>
+                                </li>
+                            ))}
+                        </ul>
+                    )}
                 </div>
             </div>
 
-            <button onClick={handleAddTransactionClick} className="add-transaction-button">
-                Add Transaction
-            </button>
+            <div className="right-container">
+                <div className="balance-and-chart">
+                    <div className={`balance ${balanceClass}`}>
+                        <h3>Current Balance: £{currentBalance}</h3>
+                    </div>
 
-            <div className="filters">
-                <input
-                    type="text"
-                    placeholder="Search transactions..."
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    className="search-bar"
-                />
-                <select
-                    value={filterType}
-                    onChange={(e) => setFilterType(e.target.value)}
-                    className="filter-dropdown"
-                >
-                    <option value="">All Types</option>
-                    {transactionTypes.map((type, index) => (
-                        <option key={index} value={type}>
-                            {type}
-                        </option>
-                    ))}
-                </select>
-                <select
-                    value={filterCategory}
-                    onChange={(e) => setFilterCategory(e.target.value)}
-                    className="filter-dropdown"
-                >
-                    <option value="">All Categories</option>
-                    {categories.map((category) => (
-                        <option key={category.id} value={category.name}>
-                            {category.name}
-                        </option>
-                    ))}
-                </select>
-                <select
-                    value={selectedPeriod}
-                    onChange={(e) => setSelectedPeriod(e.target.value)}
-                    className="filter-dropdown"
-                >
-                    <option value="currentMonth">Current Month</option>
-                    <option value="lastMonth">Last Month</option>
-                    <option value="last3Months">Last 3 Months</option>
-                </select>
+                    <div className="total-expense">
+                        <h4>Total Expense for Selected Period: £{totalExpense}</h4>
+                    </div>
+
+                    <select
+                        value={selectedPeriod}
+                        onChange={(e) => setSelectedPeriod(e.target.value)}
+                        className="period-dropdown"
+                    >
+                        <option value="currentMonth">Current Month</option>
+                        <option value="lastMonth">Last Month</option>
+                        <option value="last3Months">Last 3 Months</option>
+                    </select>
+
+                    <ResponsiveContainer width="100%" height={400}>
+                        <LineChart data={prepareChartData(filteredTransactionsByPeriod)}>
+                            <CartesianGrid strokeDasharray="3 3"/>
+                            <XAxis dataKey="date"/>
+                            <YAxis/>
+                            <Tooltip/>
+                            <Legend/>
+                            <Line type="monotone" dataKey="amount" stroke="#8884d8" activeDot={{r: 8}}/>
+                        </LineChart>
+                    </ResponsiveContainer>
+                </div>
             </div>
-
-            <ResponsiveContainer width="100%" height={400}>
-                <LineChart data={prepareChartData(filterTransactionsByPeriod(transactions, selectedPeriod))}>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="date" />
-                    <YAxis />
-                    <Tooltip />
-                    <Legend />
-                    <Line type="monotone" dataKey="amount" stroke="#8884d8" activeDot={{ r: 8 }} />
-                </LineChart>
-            </ResponsiveContainer>
 
             {isCategoryPopupVisible && (
                 <div className="popup">
@@ -402,40 +464,6 @@ const Spending = () => {
                     </div>
                 </div>
             )}
-
-            <div className="transaction-list">
-                <h3>Your Transactions</h3>
-                {sortedTransactions.length === 0 ? (
-                    <p>No transactions found.</p>
-                ) : (
-                    <ul>
-                        {sortedTransactions.map((transaction) => (
-                            <li key={transaction.id} className="transaction-item">
-                                <div className="transaction-detail">
-                                    <strong>Amount:</strong> {transaction.amount} <br/>
-                                    <strong>Category:</strong> {transaction.category.name} <br/>
-                                    <strong>Type:</strong> {transaction.type} <br/>
-                                    <strong>Date:</strong> {new Date(transaction.date).toLocaleDateString()} <br/>
-                                    <strong>Description:</strong> {transaction.description} <br/>
-                                    <strong>Carbon Footprint:</strong>{' '}
-                                    {transaction.carbonFootprint !== null && transaction.carbonFootprint !== undefined
-                                        ? `${transaction.carbonFootprint} kg CO2`
-                                        : 'Not Available'}
-                                </div>
-                                <div className="transaction-actions">
-                                    <button onClick={() => handleEditTransaction(transaction)} className="edit-button">
-                                        <FaEdit/> Edit
-                                    </button>
-                                    <button onClick={() => handleDeleteTransaction(transaction.id)}
-                                            className="delete-button">
-                                        <FaTrash/> Delete
-                                    </button>
-                                </div>
-                            </li>
-                        ))}
-                    </ul>
-                )}
-            </div>
         </div>
     );
 };
