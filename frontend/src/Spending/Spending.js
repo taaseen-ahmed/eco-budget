@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { FaEdit, FaTrash } from 'react-icons/fa';
 import axios from 'axios';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import './Spending.css';
 
 const Spending = () => {
@@ -20,6 +21,7 @@ const Spending = () => {
     const [searchQuery, setSearchQuery] = useState('');
     const [filterType, setFilterType] = useState('');
     const [filterCategory, setFilterCategory] = useState('');
+    const [selectedPeriod, setSelectedPeriod] = useState('currentMonth');
 
     const resetNewTransaction = () => {
         setNewTransaction({
@@ -42,7 +44,7 @@ const Spending = () => {
             return transaction.type === "Income"
                 ? acc + parseFloat(transaction.amount)
                 : acc - parseFloat(transaction.amount);
-        }, 0).toFixed(2); // Balance is rounded to 2 decimal places
+        }, 0).toFixed(2);
     };
 
     const fetchTransactions = useCallback(async () => {
@@ -171,6 +173,41 @@ const Spending = () => {
         setNewTransaction({ ...newTransaction, [name]: value });
     };
 
+    const filterTransactionsByPeriod = (transactions, period) => {
+        const now = new Date();
+        let startDate;
+
+        switch (period) {
+            case 'currentMonth':
+                startDate = new Date(now.getFullYear(), now.getMonth(), 1);
+                break;
+            case 'lastMonth':
+                startDate = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+                break;
+            case 'last3Months':
+                startDate = new Date(now.getFullYear(), now.getMonth() - 3, 1);
+                break;
+            default:
+                startDate = new Date(now.getFullYear(), now.getMonth(), 1);
+        }
+
+        return transactions.filter(transaction => new Date(transaction.date) >= startDate);
+    };
+
+    const prepareChartData = (transactions) => {
+        const data = {};
+
+        transactions.forEach(transaction => {
+            const date = new Date(transaction.date).toLocaleDateString();
+            if (!data[date]) {
+                data[date] = 0;
+            }
+            data[date] += parseFloat(transaction.amount);
+        });
+
+        return Object.keys(data).map(date => ({ date, amount: data[date] }));
+    };
+
     const filteredTransactions = transactions.filter((transaction) => {
         const matchesSearchQuery = transaction.description.toLowerCase().includes(searchQuery.toLowerCase());
         const matchesFilterType = filterType ? transaction.type === filterType : true;
@@ -194,10 +231,7 @@ const Spending = () => {
                 </div>
             </div>
 
-            <button
-                onClick={handleAddTransactionClick}
-                className="add-transaction-button"
-            >
+            <button onClick={handleAddTransactionClick} className="add-transaction-button">
                 Add Transaction
             </button>
 
@@ -233,7 +267,27 @@ const Spending = () => {
                         </option>
                     ))}
                 </select>
+                <select
+                    value={selectedPeriod}
+                    onChange={(e) => setSelectedPeriod(e.target.value)}
+                    className="filter-dropdown"
+                >
+                    <option value="currentMonth">Current Month</option>
+                    <option value="lastMonth">Last Month</option>
+                    <option value="last3Months">Last 3 Months</option>
+                </select>
             </div>
+
+            <ResponsiveContainer width="100%" height={400}>
+                <LineChart data={prepareChartData(filterTransactionsByPeriod(transactions, selectedPeriod))}>
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey="date" />
+                    <YAxis />
+                    <Tooltip />
+                    <Legend />
+                    <Line type="monotone" dataKey="amount" stroke="#8884d8" activeDot={{ r: 8 }} />
+                </LineChart>
+            </ResponsiveContainer>
 
             {isCategoryPopupVisible && (
                 <div className="popup">
