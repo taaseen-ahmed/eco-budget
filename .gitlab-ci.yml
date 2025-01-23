@@ -14,4 +14,4 @@ build:
 deploy:
   stage: deploy
   script:
-    - ssh -o StrictHostKeyChecking=no ubuntu@<$EC2_PUBLIC_IP> "cd ~/eco-budget && ./deploy.sh"
+    - ssh -o StrictHostKeyChecking=no ubuntu@$EC2_PUBLIC_IP "cd ~/eco-budget && ./deploy.sh"
