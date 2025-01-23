@@ -6,10 +6,10 @@ build:
   stage: build
   script:
     - docker login git.cs.bham.ac.uk:5050 -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD
-    - docker build -t git.cs.bham.ac.uk:5050/txa139/eco-budget-frontend ./frontend
-    - docker build -t git.cs.bham.ac.uk:5050/txa139/eco-budget-backend ./eco_budget
-    - docker push git.cs.bham.ac.uk:5050/txa139/eco-budget-frontend
-    - docker push git.cs.bham.ac.uk:5050/txa139/eco-budget-backend
+    - docker build --platform linux/amd64 -t git.cs.bham.ac.uk:5050/txa139/eco-budget/eco-budget-frontend ./frontend
+    - docker build --platform linux/amd64 -t git.cs.bham.ac.uk:5050/txa139/eco-budget/eco-budget-backend ./eco_budget
+    - docker push git.cs.bham.ac.uk:5050/txa139/eco-budget/eco-budget-frontend
+    - docker push git.cs.bham.ac.uk:5050/txa139/eco-budget/eco-budget-backend
 
 deploy:
   stage: deploy
