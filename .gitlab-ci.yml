@@ -2,40 +2,16 @@ stages:
   - build
   - deploy
 
-variables:
-  DOCKER_DRIVER: overlay2
-  DOCKER_TLS_CERTDIR: ""
-
 build:
   stage: build
-  image: docker:latest
-  services:
-    - name: docker:dind
-      alias: docker
   script:
-    - docker login -u "$CI_REGISTRY_USER" -p "$CI_REGISTRY_PASSWORD" $CI_REGISTRY
-    - docker-compose build
-    - docker-compose push
-  only:
-    - main
+    - docker login git.cs.bham.ac.uk:5050 -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD
+    - docker build -t git.cs.bham.ac.uk:5050/txa139/eco-budget-frontend ./frontend
+    - docker build -t git.cs.bham.ac.uk:5050/txa139/eco-budget-backend ./eco_budget
+    - docker push git.cs.bham.ac.uk:5050/txa139/eco-budget-frontend
+    - docker push git.cs.bham.ac.uk:5050/txa139/eco-budget-backend
 
 deploy:
   stage: deploy
-  image: alpine:3.17
-  before_script:
-    - apk update && apk add --no-cache openssh-client
-    - mkdir -p ~/.ssh
-    - echo "$SSH_PRIVATE_KEY" > ~/.ssh/id_rsa
-    - chmod 600 ~/.ssh/id_rsa
-    - ssh-keyscan -H 13.49.0.17 >> ~/.ssh/known_hosts
   script:
-    - echo "Checking SSH key access"
-    - ssh -i ~/.ssh/id_rsa ubuntu@13.49.0.17 'echo "SSH connection successful!"'
-    - echo "Stopping existing containers"
-    - ssh -i ~/.ssh/id_rsa ubuntu@13.49.0.17 'docker-compose -f ~/eco-budget/docker-compose.yml down'
-    - echo "Copying docker-compose.yml to EC2 instance"
-    - scp -i ~/.ssh/id_rsa docker-compose.yml ubuntu@13.49.0.17:~/eco-budget/docker-compose.yml
-    - echo "Starting containers with updated configuration"
-    - ssh -i ~/.ssh/id_rsa ubuntu@13.49.0.17 'docker-compose -f ~/eco-budget/docker-compose.yml up -d'
-  only:
-    - main
+    - ssh -o StrictHostKeyChecking=no ubuntu@<EC2_PUBLIC_IP> "cd ~/eco-budget && ./deploy.sh"
