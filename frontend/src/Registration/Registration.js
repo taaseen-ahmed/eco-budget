@@ -26,7 +26,7 @@ const Registration = () => {
         e.preventDefault();
 
         try {
-            const response = await axios.post('http://localhost:8080/api/public/auth/register', formData);
+            const response = await axios.post('/api/public/auth/register', formData);
             const { token } = response.data;
             localStorage.setItem('jwtToken', token);
             navigate('/dashboard');

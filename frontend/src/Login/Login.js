@@ -23,7 +23,7 @@ const Login = ({ setIsAuthenticated }) => {
         }
 
         try {
-            const response = await axios.post('http://localhost:8080/api/public/auth/authenticate', {
+            const response = await axios.post('/api/public/auth/authenticate', {
                 email: formData.username,
                 password: formData.password,
             });
