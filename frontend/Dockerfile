@@ -20,6 +20,9 @@ FROM nginx:alpine
 # Copy the build folder from the previous stage
 COPY --from=build /app/build /usr/share/nginx/html
 
+# Copy the nginx configuration
+COPY nginx.conf /etc/nginx/conf.d/default.conf
+
 # Expose the port the frontend will run on
 EXPOSE 80
 
