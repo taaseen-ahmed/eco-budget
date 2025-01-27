@@ -18,4 +18,4 @@ deploy:
   tags:
     - ec2-runner
   script:
-    - /home/ubuntu/deploy.sh
+    - bash /home/ubuntu/deploy.sh
