@@ -18,5 +18,4 @@ deploy:
   tags:
     - ec2-runner
   script:
-    - pwd
-    - bash deploy.sh
+    - ./deploy.sh
