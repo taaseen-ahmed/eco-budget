@@ -19,4 +19,5 @@ deploy:
     - ec2-runner
   script:
     - pwd
+    - cd /home/gitlab-runner/
     - ./deploy.sh
