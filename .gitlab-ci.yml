@@ -4,6 +4,8 @@ stages:
 
 build:
   stage: build
+  tags:
+    - local-runner
   script:
     - docker login git.cs.bham.ac.uk:5050 -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD
     - docker build --platform linux/amd64 -t git.cs.bham.ac.uk:5050/txa139/eco-budget/eco-budget-frontend ./frontend
@@ -13,5 +15,7 @@ build:
 
 deploy:
   stage: deploy
+  tags:
+    - ec2-runner
   script:
     - /home/ubuntu/deploy.sh
