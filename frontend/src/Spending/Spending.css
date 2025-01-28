@@ -407,3 +407,7 @@
     box-shadow: 0 0 8px rgba(102, 187, 106, 0.5);
     outline: none;
 }
+
+.carbon-footprint-chart{
+    margin-top: 40px;
+}

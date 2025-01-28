@@ -1,8 +1,11 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { FaEdit, FaTrash } from 'react-icons/fa';
 import axios from 'axios';
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import { Line } from 'react-chartjs-2';
+import { Chart as ChartJS, CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend } from 'chart.js';
 import './Spending.css';
+
+ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend);
 
 const Spending = () => {
     const [categories, setCategories] = useState([]);
@@ -22,6 +25,8 @@ const Spending = () => {
     const [filterType, setFilterType] = useState('');
     const [filterCategory, setFilterCategory] = useState('');
     const [selectedPeriod, setSelectedPeriod] = useState('currentMonth');
+    const [cumulativeData, setCumulativeData] = useState([]);
+    const [individualData, setIndividualData] = useState([]);
 
     const resetNewTransaction = () => {
         setNewTransaction({
@@ -194,23 +199,51 @@ const Spending = () => {
         return transactions.filter(transaction => new Date(transaction.date) >= startDate);
     };
 
-    const prepareChartData = (transactions) => {
-        const data = {};
-        let cumulativeTotal = 0;
+    const calculateCumulativeData = useCallback((transactions) => {
+        const filteredTransactions = filterTransactionsByPeriod(transactions, selectedPeriod);
+        const sortedTransactions = [...filteredTransactions].sort((a, b) => new Date(a.date) - new Date(b.date));
+        let cumulativeSum = 0;
+        const cumulative = sortedTransactions.map(transaction => {
+            cumulativeSum += parseFloat(transaction.amount) || 0;
+            return { date: transaction.date, cumulativeSum };
+        });
+        const individual = sortedTransactions.map(transaction => ({
+            date: transaction.date,
+            amount: parseFloat(transaction.amount) || 0,
+        }));
+        setCumulativeData(cumulative);
+        setIndividualData(individual);
+    }, [selectedPeriod]);
 
-        transactions
-            .filter(transaction => transaction.type === "Expense") // Only include expense transactions
-            .sort((a, b) => new Date(a.date) - new Date(b.date)) // Sort transactions by date
-            .forEach(transaction => {
-                const date = new Date(transaction.date).toLocaleDateString();
-                if (!data[date]) {
-                    data[date] = 0;
+    useEffect(() => {
+        calculateCumulativeData(transactions);
+    }, [transactions, selectedPeriod, calculateCumulativeData]);
+
+    const chartData = {
+        labels: cumulativeData.map(data => new Date(data.date).toLocaleDateString()),
+        datasets: [
+            {
+                label: 'Cumulative Spending (£)',
+                data: cumulativeData.map(data => data.cumulativeSum),
+                fill: false,
+                backgroundColor: 'rgba(75,192,192,0.4)',
+                borderColor: 'rgba(75,192,192,1)',
+            },
+        ],
+    };
+
+    const chartOptions = {
+        plugins: {
+            tooltip: {
+                callbacks: {
+                    label: function(context) {
+                        const index = context.dataIndex;
+                        const individualAmount = individualData[index]?.amount || 0;
+                        return `£${individualAmount}`;
+                    }
                 }
-                cumulativeTotal += parseFloat(transaction.amount);
-                data[date] = cumulativeTotal;
-            });
-
-        return Object.keys(data).map(date => ({ date, amount: data[date] }));
+            }
+        }
     };
 
     const filteredTransactions = transactions.filter((transaction) => {
@@ -338,16 +371,9 @@ const Spending = () => {
                         <option value="last3Months">Last 3 Months</option>
                     </select>
 
-                    <ResponsiveContainer width="100%" height={400}>
-                        <LineChart data={prepareChartData(filteredTransactionsByPeriod)}>
-                            <CartesianGrid strokeDasharray="3 3"/>
-                            <XAxis dataKey="date"/>
-                            <YAxis/>
-                            <Tooltip/>
-                            <Legend/>
-                            <Line type="monotone" dataKey="amount" stroke="#8884d8" activeDot={{r: 8}}/>
-                        </LineChart>
-                    </ResponsiveContainer>
+                    <div className="spending-chart">
+                        <Line data={chartData} options={chartOptions} />
+                    </div>
                 </div>
             </div>
 
