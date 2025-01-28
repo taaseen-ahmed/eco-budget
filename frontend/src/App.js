@@ -9,6 +9,7 @@ import Dashboard from './Dashboard/Dashboard';
 import Spending from './Spending/Spending';
 import Budget from './Budget/Budget';
 import PrivateRoute from './PrivateRoute';
+import CarbonFootprint from './CarbonFootprint/CarbonFootprint';
 import './styles/App.css';
 
 function App() {
@@ -73,6 +74,9 @@ function AppContent({ isAuthenticated, setIsAuthenticated }) {
                                     <Nav.Link as={Link} to="/budget">
                                         Budget
                                     </Nav.Link>
+                                    <Nav.Link as={Link} to="/carbon-footprint">
+                                        Carbon Footprint
+                                    </Nav.Link>
                                     <Button variant="outline-danger" size="sm" onClick={handleLogout} className="ms-3" >
                                         Log Out
                                     </Button>
@@ -108,6 +112,10 @@ function AppContent({ isAuthenticated, setIsAuthenticated }) {
                     <Route
                         path="/budget"
                         element={<PrivateRoute element={<Budget />} isAuthenticated={isAuthenticated} />}
+                    />
+                    <Route
+                        path="/carbon-footprint"
+                        element={<PrivateRoute element={<CarbonFootprint />} isAuthenticated={isAuthenticated} />}
                     />
                 </Routes>
             </Container>
