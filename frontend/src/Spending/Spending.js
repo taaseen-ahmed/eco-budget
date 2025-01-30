@@ -200,7 +200,8 @@ const Spending = () => {
     };
 
     const calculateCumulativeData = useCallback((transactions) => {
-        const filteredTransactions = filterTransactionsByPeriod(transactions, selectedPeriod);
+        const filteredTransactions = filterTransactionsByPeriod(transactions, selectedPeriod)
+            .filter(transaction => transaction.type === "Expense"); // Filter out income transactions
         const sortedTransactions = [...filteredTransactions].sort((a, b) => new Date(a.date) - new Date(b.date));
         let cumulativeSum = 0;
         const cumulative = sortedTransactions.map(transaction => {
