@@ -11,7 +11,7 @@ const CarbonFootprint = () => {
     const [totalCarbonFootprint, setTotalCarbonFootprint] = useState(0);
     const [cumulativeData, setCumulativeData] = useState([]);
     const [individualData, setIndividualData] = useState([]);
-    const [categoryBreakdown, setCategoryBreakdown] = useState([]);  // Changed to array of objects
+    const [categoryBreakdown, setCategoryBreakdown] = useState([]);
 
     const fetchTransactions = useCallback(async () => {
         try {
@@ -32,7 +32,7 @@ const CarbonFootprint = () => {
 
         const filteredTransactions = transactions.filter(transaction => {
             const transactionDate = new Date(transaction.date);
-            return transactionDate.getMonth() === currentMonth && transactionDate.getFullYear() === currentYear;
+            return transactionDate.getMonth() === currentMonth && transactionDate.getFullYear() === currentYear && transaction.type !== 'Income';
         });
 
         const total = filteredTransactions.reduce((sum, transaction) => {
@@ -43,7 +43,8 @@ const CarbonFootprint = () => {
     };
 
     const calculateCumulativeData = (transactions) => {
-        const sortedTransactions = [...transactions].sort((a, b) => new Date(a.date) - new Date(b.date));
+        const filteredTransactions = transactions.filter(transaction => transaction.type !== 'Income');
+        const sortedTransactions = [...filteredTransactions].sort((a, b) => new Date(a.date) - new Date(b.date));
         let cumulativeSum = 0;
         const cumulative = sortedTransactions.map(transaction => {
             cumulativeSum += transaction.carbonFootprint || 0;
@@ -58,8 +59,9 @@ const CarbonFootprint = () => {
     };
 
     const calculateCategoryBreakdown = (transactions) => {
-        const tempBreakdown = transactions.reduce((acc, transaction) => {
-            const categoryName = transaction.category?.name || 'Uncategorized'; // Extract the category name
+        const filteredTransactions = transactions.filter(transaction => transaction.type !== 'Income');
+        const tempBreakdown = filteredTransactions.reduce((acc, transaction) => {
+            const categoryName = transaction.category?.name || 'Uncategorized';
             if (!acc[categoryName]) {
                 acc[categoryName] = 0;
             }
