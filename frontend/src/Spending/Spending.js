@@ -19,12 +19,13 @@ const Spending = () => {
         description: ''
     });
     const [isPopupVisible, setPopupVisible] = useState(false);
-    const [isCategoryPopupVisible, setCategoryPopupVisible] = useState(false); // New state for category popup visibility
+    const [isCategoryPopupVisible, setCategoryPopupVisible] = useState(false);
     const transactionTypes = ["Income", "Expense"];
     const [searchQuery, setSearchQuery] = useState('');
     const [filterType, setFilterType] = useState('');
     const [filterCategory, setFilterCategory] = useState('');
     const [selectedPeriod, setSelectedPeriod] = useState('currentMonth');
+    const [selectedCategory, setSelectedCategory] = useState('All'); // New state for selected category
     const [cumulativeData, setCumulativeData] = useState([]);
     const [individualData, setIndividualData] = useState([]);
 
@@ -43,7 +44,6 @@ const Spending = () => {
         setPopupVisible(true);
     };
 
-    // Calculate the current balance
     const calculateBalance = () => {
         return transactions.reduce((acc, transaction) => {
             return transaction.type === "Income"
@@ -108,12 +108,10 @@ const Spending = () => {
             };
 
             if (newTransaction.id) {
-                // Update existing transaction
                 await axios.put(`/api/transaction/${newTransaction.id}`, transactionToSend, {
                     headers: { Authorization: `Bearer ${token}` },
                 });
             } else {
-                // Add new transaction
                 const response = await axios.post('/api/transaction', transactionToSend, {
                     headers: { Authorization: `Bearer ${token}` },
                 });
@@ -121,8 +119,8 @@ const Spending = () => {
             }
 
             setNewTransaction({ amount: '', category: '', type: '', date: '', description: '' });
-            setPopupVisible(false); // Close the popup
-            fetchTransactions(); // Fetch all transactions again
+            setPopupVisible(false);
+            fetchTransactions();
         } catch (error) {
             console.error('Error adding/updating transaction:', error);
             alert('Failed to add/update transaction. Please try again.');
@@ -165,8 +163,8 @@ const Spending = () => {
             });
             setCategories([...categories, response.data]);
             setNewCategory('');
-            setCategoryPopupVisible(false); // Close the category popup after adding
-            setPopupVisible(true); // Reopen the transaction popup
+            setCategoryPopupVisible(false);
+            setPopupVisible(true);
         } catch (error) {
             console.error('Error adding category:', error);
             alert('Failed to add category. Please try again.');
@@ -201,7 +199,7 @@ const Spending = () => {
 
     const calculateCumulativeData = useCallback((transactions) => {
         const filteredTransactions = filterTransactionsByPeriod(transactions, selectedPeriod)
-            .filter(transaction => transaction.type === "Expense"); // Filter out income transactions
+            .filter(transaction => transaction.type === "Expense" && (selectedCategory === 'All' || transaction.category.name === selectedCategory));
         const sortedTransactions = [...filteredTransactions].sort((a, b) => new Date(a.date) - new Date(b.date));
         let cumulativeSum = 0;
         const cumulative = sortedTransactions.map(transaction => {
@@ -214,11 +212,11 @@ const Spending = () => {
         }));
         setCumulativeData(cumulative);
         setIndividualData(individual);
-    }, [selectedPeriod]);
+    }, [selectedPeriod, selectedCategory]);
 
     useEffect(() => {
         calculateCumulativeData(transactions);
-    }, [transactions, selectedPeriod, calculateCumulativeData]);
+    }, [transactions, selectedPeriod, selectedCategory, calculateCumulativeData]);
 
     const chartData = {
         labels: cumulativeData.map(data => new Date(data.date).toLocaleDateString()),
@@ -358,10 +356,6 @@ const Spending = () => {
                         <h3>Current Balance: £{currentBalance}</h3>
                     </div>
 
-                    <div className="total-expense">
-                        <h4>Total Expense for Selected Period: £{totalExpense}</h4>
-                    </div>
-
                     <select
                         value={selectedPeriod}
                         onChange={(e) => setSelectedPeriod(e.target.value)}
@@ -371,6 +365,23 @@ const Spending = () => {
                         <option value="lastMonth">Last Month</option>
                         <option value="last3Months">Last 3 Months</option>
                     </select>
+
+                    <select
+                        value={selectedCategory}
+                        onChange={(e) => setSelectedCategory(e.target.value)}
+                        className="category-dropdown"
+                    >
+                        <option value="All">All Categories</option>
+                        {categories.map((category) => (
+                            <option key={category.id} value={category.name}>
+                                {category.name}
+                            </option>
+                        ))}
+                    </select>
+
+                    <div className="total-expense">
+                        <h4>Total Expense for Selected Period: £{totalExpense}</h4>
+                    </div>
 
                     <div className="spending-chart">
                         <Line data={chartData} options={chartOptions} />

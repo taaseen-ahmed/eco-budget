@@ -30,7 +30,6 @@
     position: sticky;
     top: calc(var(--navbar-height) + 60px);
     height: 600px;
-    overflow-y: auto;
     background-color: var(--light-gray);
     padding: 20px;
     border-radius: 8px;
@@ -38,15 +37,26 @@
 }
 
 .period-dropdown {
-    position: absolute;
-    top: 0;
-    right: 20px;
+    width: 200px; /* Set a fixed width for both dropdowns */
     padding: 12px;
     font-size: 1rem;
     border: 1px solid var(--primary-color);
     border-radius: 8px;
     background-color: #fff;
     transition: border-color 0.3s, box-shadow 0.3s;
+    box-sizing: border-box; /* Ensure padding is included in the width */
+    margin-right: 20px; /* Add margin to separate from the next select element */
+}
+
+.category-dropdown {
+    width: 200px; /* Set a fixed width for both dropdowns */
+    padding: 12px;
+    font-size: 1rem;
+    border: 1px solid var(--primary-color);
+    border-radius: 8px;
+    background-color: #fff;
+    transition: border-color 0.3s, box-shadow 0.3s;
+    box-sizing: border-box; /* Ensure padding is included in the width */
 }
 
 .filters {
@@ -74,7 +84,7 @@
 }
 
 .balance {
-    margin-bottom: 50px;
+    margin-bottom: 40px;
 }
 
 
@@ -83,9 +93,9 @@
 }
 
 .total-expense {
-    margin-top: 10px;
+    margin-top: 20px; /* Adjust this value to push the div down */
     font-size: 1.2rem;
-    color: black;
+    color: var(--primary-color);
 }
 
 .header {
@@ -364,16 +374,12 @@
     background-color: #e53935;
 }
 
-/* Spending.css */
-
-/* Styling for the filters container */
 .filters {
     display: flex;
     gap: 10px;
     margin-bottom: 20px;
 }
 
-/* Styling for the search bar */
 .search-bar {
     padding: 12px;
     font-size: 1rem;
@@ -390,7 +396,6 @@
     outline: none;
 }
 
-/* Styling for the filter dropdowns */
 .filter-dropdown {
     padding: 12px;
     font-size: 1rem;
