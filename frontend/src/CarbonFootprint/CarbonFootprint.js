@@ -2,16 +2,18 @@ import React, { useCallback, useState, useEffect } from 'react';
 import './CarbonFootprint.css';
 import axios from 'axios';
 import { Line, Bar } from 'react-chartjs-2';
-import { Chart as ChartJS, CategoryScale, LinearScale, PointElement, LineElement, BarElement, Title, Tooltip, Legend } from 'chart.js';
+import { Chart as ChartJS, CategoryScale, LinearScale, PointElement, LineElement, BarElement, Title, Tooltip, Legend, TimeScale } from 'chart.js';
+import 'chartjs-adapter-date-fns';
 
-ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, BarElement, Title, Tooltip, Legend);
+ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, BarElement, Title, Tooltip, Legend, TimeScale);
 
 const CarbonFootprint = () => {
     const [transactions, setTransactions] = useState([]);
     const [totalCarbonFootprint, setTotalCarbonFootprint] = useState(0);
     const [cumulativeData, setCumulativeData] = useState([]);
-    const [individualData, setIndividualData] = useState([]);
     const [categoryBreakdown, setCategoryBreakdown] = useState([]);
+    const [previousMonthData, setPreviousMonthData] = useState([]);
+    const [comparePreviousMonth, setComparePreviousMonth] = useState(false);
 
     const fetchTransactions = useCallback(async () => {
         try {
@@ -42,20 +44,33 @@ const CarbonFootprint = () => {
         setTotalCarbonFootprint(total.toFixed(2));
     };
 
-    const calculateCumulativeData = (transactions) => {
-        const filteredTransactions = transactions.filter(transaction => transaction.type !== 'Income');
+    const calculateCumulativeData = (transactions, monthOffset = 0) => {
+        const currentDate = new Date();
+        let targetMonth = currentDate.getMonth() - monthOffset;
+        let targetYear = currentDate.getFullYear();
+
+        if (targetMonth < 0) {
+            targetMonth += 12;
+            targetYear -= 1;
+        }
+
+        const filteredTransactions = transactions.filter(transaction => {
+            const transactionDate = new Date(transaction.date);
+            return transactionDate.getMonth() === targetMonth && transactionDate.getFullYear() === targetYear && transaction.type !== 'Income';
+        });
+
         const sortedTransactions = [...filteredTransactions].sort((a, b) => new Date(a.date) - new Date(b.date));
         let cumulativeSum = 0;
         const cumulative = sortedTransactions.map(transaction => {
             cumulativeSum += transaction.carbonFootprint || 0;
             return { date: transaction.date, cumulativeSum };
         });
-        const individual = sortedTransactions.map(transaction => ({
-            date: transaction.date,
-            carbonFootprint: transaction.carbonFootprint || 0,
-        }));
-        setCumulativeData(cumulative);
-        setIndividualData(individual);
+
+        if (monthOffset === 0) {
+            setCumulativeData(cumulative);
+        } else {
+            setPreviousMonthData(cumulative);
+        }
     };
 
     const calculateCategoryBreakdown = (transactions) => {
@@ -84,20 +99,28 @@ const CarbonFootprint = () => {
     useEffect(() => {
         calculateTotalCarbonFootprint(transactions);
         calculateCumulativeData(transactions);
+        calculateCumulativeData(transactions, 1); // Fetch previous month data
         calculateCategoryBreakdown(transactions);
     }, [transactions]);
 
     const lineChartData = {
-        labels: cumulativeData.map(data => new Date(data.date).toLocaleDateString()),
+        labels: cumulativeData.map(data => new Date(data.date)),
         datasets: [
             {
-                label: 'Carbon Footprint (kg CO2)',
-                data: cumulativeData.map(data => data.cumulativeSum),
+                label: 'Current Month Carbon Footprint (kg CO2)',
+                data: cumulativeData.map(data => ({ x: new Date(data.date).getDate(), y: data.cumulativeSum })),
                 fill: false,
                 backgroundColor: 'rgba(75,192,192,0.4)',
                 borderColor: 'rgba(75,192,192,1)',
             },
-        ],
+            comparePreviousMonth && {
+                label: 'Previous Month Carbon Footprint (kg CO2)',
+                data: previousMonthData.map(data => ({ x: new Date(data.date).getDate(), y: data.cumulativeSum })),
+                fill: false,
+                backgroundColor: 'rgba(255,99,132,0.4)',
+                borderColor: 'rgba(255,99,132,1)',
+            },
+        ].filter(Boolean),
     };
 
     const lineChartOptions = {
@@ -105,17 +128,34 @@ const CarbonFootprint = () => {
             tooltip: {
                 callbacks: {
                     label: function(context) {
+                        const datasetIndex = context.datasetIndex;
                         const index = context.dataIndex;
-                        const individualFootprint = individualData[index]?.carbonFootprint || 0;
+                        const data = datasetIndex === 0 ? cumulativeData : previousMonthData;
+                        const individualFootprint = data[index]?.cumulativeSum || 0;
                         return `${individualFootprint} kg CO2`;
                     }
                 }
             }
-        }
+        },
+        scales: {
+            x: {
+                type: 'linear',
+                title: {
+                    display: true,
+                    text: 'Day of the Month',
+                },
+            },
+            y: {
+                title: {
+                    display: true,
+                    text: 'Cumulative Carbon Footprint (kg CO2)',
+                },
+            },
+        },
     };
 
     const barChartData = {
-        labels: categoryBreakdown.map(item => item.category), // Correct category names
+        labels: categoryBreakdown.map(item => item.category),
         datasets: [
             {
                 label: 'Carbon Footprint by Category (kg CO2)',
@@ -156,13 +196,21 @@ const CarbonFootprint = () => {
             <div className="total-carbon-footprint">
                 <h3>Total Carbon Footprint for Current Month: {totalCarbonFootprint} kg CO2</h3>
             </div>
-
+            <div className="toggle-container">
+                <label>
+                    <input
+                        type="checkbox"
+                        checked={comparePreviousMonth}
+                        onChange={() => setComparePreviousMonth(!comparePreviousMonth)}
+                    />
+                    Compare with Previous Month
+                </label>
+            </div>
             <div className="carbon-footprint-chart">
                 <h3>Cumulative Carbon Footprint Over Time</h3>
                 <p>This line chart shows the cumulative total of your carbon emissions over time based on your spending transactions.</p>
                 <Line data={lineChartData} options={lineChartOptions} />
             </div>
-
             <div className="category-breakdown">
                 <h3>Carbon Footprint by Spending Category</h3>
                 <p>This bar chart shows the carbon emissions associated with each spending category for the current month.</p>

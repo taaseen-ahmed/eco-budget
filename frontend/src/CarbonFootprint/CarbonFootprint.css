@@ -56,3 +56,13 @@
 .category-breakdown {
     margin-top: 40px;
 }
+
+.toggle-container {
+    text-align: center;
+    margin: 20px 0;
+}
+
+.toggle-container label {
+    font-size: 1rem;
+    color: var(--text-color);
+}
