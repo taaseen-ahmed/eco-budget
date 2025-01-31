@@ -74,7 +74,14 @@ const CarbonFootprint = () => {
     };
 
     const calculateCategoryBreakdown = (transactions) => {
-        const filteredTransactions = transactions.filter(transaction => transaction.type !== 'Income');
+        const currentMonth = new Date().getMonth();
+        const currentYear = new Date().getFullYear();
+
+        const filteredTransactions = transactions.filter(transaction => {
+            const transactionDate = new Date(transaction.date);
+            return transactionDate.getMonth() === currentMonth && transactionDate.getFullYear() === currentYear && transaction.type !== 'Income';
+        });
+
         const tempBreakdown = filteredTransactions.reduce((acc, transaction) => {
             const categoryName = transaction.category?.name || 'Uncategorized';
             if (!acc[categoryName]) {
@@ -128,8 +135,9 @@ const CarbonFootprint = () => {
             tooltip: {
                 callbacks: {
                     label: function(context) {
-                        const individualFootprint = context.raw.individualFootprint || 0;
-                        return `${individualFootprint} kg CO2`;
+                        const individualFootprint = (context.raw.individualFootprint || 0).toFixed(2);
+                        const cumulativeSum = (context.raw.y || 0).toFixed(2);
+                        return `Individual: ${individualFootprint} kg CO2\nCumulative: ${cumulativeSum} kg CO2`;
                     }
                 }
             }
