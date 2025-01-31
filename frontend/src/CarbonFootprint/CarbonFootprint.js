@@ -63,7 +63,7 @@ const CarbonFootprint = () => {
         let cumulativeSum = 0;
         const cumulative = sortedTransactions.map(transaction => {
             cumulativeSum += transaction.carbonFootprint || 0;
-            return { date: transaction.date, cumulativeSum };
+            return { date: transaction.date, cumulativeSum, individualFootprint: transaction.carbonFootprint || 0 };
         });
 
         if (monthOffset === 0) {
@@ -108,14 +108,14 @@ const CarbonFootprint = () => {
         datasets: [
             {
                 label: 'Current Month Carbon Footprint (kg CO2)',
-                data: cumulativeData.map(data => ({ x: new Date(data.date).getDate(), y: data.cumulativeSum })),
+                data: cumulativeData.map(data => ({ x: new Date(data.date).getDate(), y: data.cumulativeSum, individualFootprint: data.individualFootprint })),
                 fill: false,
                 backgroundColor: 'rgba(75,192,192,0.4)',
                 borderColor: 'rgba(75,192,192,1)',
             },
             comparePreviousMonth && {
                 label: 'Previous Month Carbon Footprint (kg CO2)',
-                data: previousMonthData.map(data => ({ x: new Date(data.date).getDate(), y: data.cumulativeSum })),
+                data: previousMonthData.map(data => ({ x: new Date(data.date).getDate(), y: data.cumulativeSum, individualFootprint: data.individualFootprint })),
                 fill: false,
                 backgroundColor: 'rgba(255,99,132,0.4)',
                 borderColor: 'rgba(255,99,132,1)',
@@ -128,10 +128,7 @@ const CarbonFootprint = () => {
             tooltip: {
                 callbacks: {
                     label: function(context) {
-                        const datasetIndex = context.datasetIndex;
-                        const index = context.dataIndex;
-                        const data = datasetIndex === 0 ? cumulativeData : previousMonthData;
-                        const individualFootprint = data[index]?.cumulativeSum || 0;
+                        const individualFootprint = context.raw.individualFootprint || 0;
                         return `${individualFootprint} kg CO2`;
                     }
                 }
