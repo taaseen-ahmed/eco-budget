@@ -32,6 +32,9 @@ public class AppUser implements UserDetails {
     @Enumerated(EnumType.STRING) // Stores the role (e.g., "USER", "ADMIN") as a string in the database.
     private Role role;
 
+    @Column(nullable = false)
+    private boolean transactionsUpdated;
+
     // Returns the authorities granted to the user, based on their role.
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {

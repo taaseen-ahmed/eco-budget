@@ -84,4 +84,31 @@ public class ChatGPTService {
             return null;  // Return null in case of failure
         }
     }
+
+    public String getRecommendation(String prompt) {
+        try {
+            String requestBody = objectMapper.writeValueAsString(
+                    new ChatGPTRequest(MODEL, prompt, 0.7)
+            );
+
+            HttpHeaders headers = new HttpHeaders();
+            headers.set("Authorization", "Bearer " + apiKey);
+            headers.set("Content-Type", "application/json");
+
+            HttpEntity<String> request = new HttpEntity<>(requestBody, headers);
+
+            ResponseEntity<String> response = restTemplate.exchange(API_URL, HttpMethod.POST, request, String.class);
+            JsonNode root = objectMapper.readTree(response.getBody());
+
+            JsonNode contentNode = root.at("/choices/0/message/content");
+            if (!contentNode.isMissingNode()) {
+                return contentNode.asText();
+            } else {
+                throw new IllegalArgumentException("Invalid response structure from ChatGPT API");
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            return "Error generating recommendation: " + e.getMessage();
+        }
+    }
 }

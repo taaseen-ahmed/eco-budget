@@ -10,6 +10,7 @@ import com.taaseenahmed.eco_budget.Config.ResourceNotFoundException;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -74,6 +75,13 @@ public class TransactionService {
         Transaction savedTransaction = transactionRepository.save(transaction);
         TransactionDTO responseDTO = convertToDTO(savedTransaction);
         responseDTO.setCarbonMultiplierUsed(carbonMultiplierUsed); // Set the multiplier used
+
+        // Check if the transaction date is within the last 30 days
+        if (transaction.getDate().isAfter(LocalDateTime.now().minusDays(30))) {
+            user.setTransactionsUpdated(true);
+            appUserRepository.save(user);
+        }
+
         return responseDTO;
     }
 
@@ -156,15 +164,30 @@ public class TransactionService {
         Transaction updatedTransaction = transactionRepository.save(existingTransaction);
         TransactionDTO responseDTO = convertToDTO(updatedTransaction);
         responseDTO.setCarbonMultiplierUsed(carbonMultiplierUsed); // Set the multiplier used
+
+        // Check if the transaction date is within the last 30 days
+        if (existingTransaction.getDate().isAfter(LocalDateTime.now().minusDays(30))) {
+            AppUser user = existingTransaction.getAppUser();
+            user.setTransactionsUpdated(true);
+            appUserRepository.save(user);
+        }
+
         return responseDTO;
     }
 
     // Delete a transaction by ID
     public void deleteTransaction(Long id) {
-        if (!transactionRepository.existsById(id)) {
-            throw new ResourceNotFoundException("Transaction not found with id: " + id);
+        Transaction existingTransaction = transactionRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Transaction not found with id: " + id));
+
+        // Check if the transaction date is within the last 30 days
+        if (existingTransaction.getDate().isAfter(LocalDateTime.now().minusDays(30))) {
+            AppUser user = existingTransaction.getAppUser();
+            user.setTransactionsUpdated(true);
+            appUserRepository.save(user);
         }
-        transactionRepository.deleteById(id); // Delete the transaction
+
+        transactionRepository.delete(existingTransaction);
     }
 
     // Convert a Transaction entity to a DTO
