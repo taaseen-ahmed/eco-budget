@@ -87,7 +87,14 @@ public class RecommendationService {
         for (String tip : tips) {
             String trimmedTip = tip.trim();
             if (!trimmedTip.isEmpty() && trimmedTip.length() >= 5) {
-                recommendations.add(trimmedTip);
+                // Remove any leading or trailing special characters
+                trimmedTip = trimmedTip.replaceAll("^\\*+|\\*+$", "").trim();
+                // Remove '**' that comes after the title
+                trimmedTip = trimmedTip.replaceAll("\\*\\*$", "").replaceAll("\\*\\*:", ":").trim();
+                // Exclude the introductory sentence
+                if (!trimmedTip.startsWith("Based on your transaction data")) {
+                    recommendations.add(trimmedTip);
+                }
             }
         }
 
@@ -95,26 +102,61 @@ public class RecommendationService {
     }
 
     private String createSpendingPrompt(List<Transaction> transactions) {
-        StringBuilder prompt = new StringBuilder("Based on the following transactions, provide 4-5 personalized spending recommendations and tips. "
-                + "Ensure each recommendation is listed on a new line and starts with a number followed by a period. "
-                + "Transactions are as follows: ");
+        StringBuilder prompt = new StringBuilder("Analyze the following transaction data and provide 4-5 personalized spending recommendations. "
+                + "Each recommendation should be concise and start with a number followed by a period. "
+                + "Here are the transaction details in JSON format:\n");
+
+        prompt.append("[");
+        int count = 0;
 
         for (Transaction transaction : transactions) {
-            prompt.append(String.format("Category: %s, Amount: %.2f. ", transaction.getCategory(), transaction.getAmount()));
+            if (count > 10) break; // Limit the number of transactions to prevent prompt bloat
+            prompt.append(String.format("{\"category\":\"%s\", \"amount\":%.2f, \"description\":\"%s\"}, ",
+                    transaction.getCategory(),
+                    transaction.getAmount(),
+                    truncateDescription(transaction.getDescription())
+            ));
+            count++;
         }
-        prompt.append("Please maintain the numbered format.");
+
+        if (prompt.charAt(prompt.length() - 2) == ',') {
+            prompt.delete(prompt.length() - 2, prompt.length()); // Remove trailing comma
+        }
+
+        prompt.append("]");
+        prompt.append("\nPlease provide actionable recommendations based on spending patterns.");
         return prompt.toString();
     }
 
+    private String truncateDescription(String description) {
+        if (description == null) return "No description";
+        return description.length() > 50 ? description.substring(0, 50) + "..." : description;
+    }
+
     private String createCarbonFootprintPrompt(List<Transaction> transactions) {
-        StringBuilder prompt = new StringBuilder("Based on the following transactions, provide 4-5 carbon footprint reduction recommendations and tips. "
-                + "Ensure each recommendation is listed on a new line and starts with a number followed by a period. "
-                + "Transactions are as follows: ");
+        StringBuilder prompt = new StringBuilder("Analyze the following transaction data and provide 4-5 personalized recommendations for reducing carbon footprint. "
+                + "Recommendations should start with a number followed by a period. "
+                + "Here are the transaction details in JSON format:\n");
+
+        prompt.append("[");
+        int count = 0;
 
         for (Transaction transaction : transactions) {
-            prompt.append(String.format("Category: %s, Carbon Footprint: %.2f. ", transaction.getCategory(), transaction.getCarbonFootprint()));
+            if (count > 10) break;
+            prompt.append(String.format("{\"category\":\"%s\", \"carbonFootprint\":%.2f, \"description\":\"%s\"}, ",
+                    transaction.getCategory(),
+                    transaction.getCarbonFootprint(),
+                    truncateDescription(transaction.getDescription())
+            ));
+            count++;
         }
-        prompt.append("Please maintain the numbered format.");
+
+        if (prompt.charAt(prompt.length() - 2) == ',') {
+            prompt.delete(prompt.length() - 2, prompt.length());
+        }
+
+        prompt.append("]");
+        prompt.append("\nPlease provide actionable tips based on the carbon footprint patterns.");
         return prompt.toString();
     }
 }
