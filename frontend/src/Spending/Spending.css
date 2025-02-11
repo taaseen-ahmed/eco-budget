@@ -11,8 +11,6 @@
 .spending-container {
     display: flex;
     gap: 20px;
-    flex-wrap: wrap; /* Ensures containers stack on smaller screens */
-    justify-content: space-between; /* Ensures containers have space between them */
 }
 
 .left-container, .right-container {
@@ -21,7 +19,6 @@
     padding: 20px;
     border-radius: 8px;
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-    overflow-y: auto; /* Enables vertical scrolling */
 }
 
 .balance-and-chart {
@@ -29,18 +26,19 @@
     padding-top: 5px;
 }
 
-/* No fixed height. Containers grow naturally with content */
-.left-container,
-.right-container {
-    min-height: 500px; /* Sets a minimum height for the containers */
-}
-
-/* Ensure the right container is sticky */
 .right-container {
     position: sticky;
     top: calc(var(--navbar-height) + 60px);
+    background-color: var(--light-gray);
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    display: flex;
+    flex-direction: column;
+    /* Ensure the container can grow with its content */
+    max-height: calc(100vh - var(--navbar-height) - 80px);
+    overflow-y: auto;
 }
-
 
 .period-dropdown {
     width: 200px; /* Set a fixed width for both dropdowns */
@@ -95,7 +93,7 @@
 
 
 .ResponsiveContainer {
-    margin-top: 40px; /* Push the line graph down */
+    margin-top: 20px; /* Reduce this value to decrease the space */
 }
 
 .total-expense {
