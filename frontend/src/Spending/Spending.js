@@ -28,6 +28,8 @@ const Spending = () => {
     const [selectedCategory, setSelectedCategory] = useState('All'); // New state for selected category
     const [cumulativeData, setCumulativeData] = useState([]);
     const [individualData, setIndividualData] = useState([]);
+    const [recommendations, setRecommendations] = useState([]);
+    const [loading, setLoading] = useState(false);
 
     const resetNewTransaction = () => {
         setNewTransaction({
@@ -75,6 +77,22 @@ const Spending = () => {
         } catch (error) {
             console.error('Error fetching categories:', error);
             alert('Failed to fetch categories. Please try again.');
+        }
+    }, []);
+
+    const fetchRecommendations = useCallback(async () => {
+        setLoading(true);
+        try {
+            const token = localStorage.getItem('jwtToken');
+            const response = await axios.get('/api/recommendations/spending', {
+                headers: { Authorization: `Bearer ${token}` },
+            });
+            setRecommendations(response.data.spendingRecommendations);
+        } catch (error) {
+            console.error('Error fetching recommendations:', error);
+            alert('Failed to fetch recommendations. Please try again.');
+        } finally {
+            setLoading(false);
         }
     }, []);
 
@@ -385,6 +403,18 @@ const Spending = () => {
 
                     <div className="spending-chart">
                         <Line data={chartData} options={chartOptions} />
+                    </div>
+
+                    <div className="recommendations">
+                        <h4>Spending Recommendations</h4>
+                        <button onClick={fetchRecommendations} className="add-transaction-button" disabled={loading}>
+                            {loading ? <div className="spinner"></div> : (recommendations.length === 0 ? 'Generate Recommendations' : 'Regenerate Recommendations')}
+                        </button>
+                        <ul>
+                            {recommendations.map((recommendation, index) => (
+                                <li key={index}>{recommendation}</li>
+                            ))}
+                        </ul>
                     </div>
                 </div>
             </div>

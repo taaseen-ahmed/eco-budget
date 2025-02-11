@@ -11,6 +11,8 @@
 .spending-container {
     display: flex;
     gap: 20px;
+    flex-wrap: wrap; /* Ensures containers stack on smaller screens */
+    justify-content: space-between; /* Ensures containers have space between them */
 }
 
 .left-container, .right-container {
@@ -19,6 +21,7 @@
     padding: 20px;
     border-radius: 8px;
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    overflow-y: auto; /* Enables vertical scrolling */
 }
 
 .balance-and-chart {
@@ -26,15 +29,18 @@
     padding-top: 5px;
 }
 
+/* No fixed height. Containers grow naturally with content */
+.left-container,
+.right-container {
+    min-height: 500px; /* Sets a minimum height for the containers */
+}
+
+/* Ensure the right container is sticky */
 .right-container {
     position: sticky;
     top: calc(var(--navbar-height) + 60px);
-    height: 600px;
-    background-color: var(--light-gray);
-    padding: 20px;
-    border-radius: 8px;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 }
+
 
 .period-dropdown {
     width: 200px; /* Set a fixed width for both dropdowns */
@@ -415,4 +421,21 @@
 
 .carbon-footprint-chart{
     margin-top: 40px;
+}
+
+.spinner {
+    border: 4px solid rgba(0, 0, 0, 0.1);
+    border-left-color: #09f;
+    border-radius: 50%;
+    width: 24px;
+    height: 24px;
+    animation: spin 1s linear infinite;
+    display: inline-block;
+    vertical-align: middle;
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
 }

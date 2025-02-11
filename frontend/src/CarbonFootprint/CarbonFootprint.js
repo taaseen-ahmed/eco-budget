@@ -14,6 +14,8 @@ const CarbonFootprint = () => {
     const [categoryBreakdown, setCategoryBreakdown] = useState([]);
     const [previousMonthData, setPreviousMonthData] = useState([]);
     const [comparePreviousMonth, setComparePreviousMonth] = useState(false);
+    const [recommendations, setRecommendations] = useState([]);
+    const [loading, setLoading] = useState(false);
 
     const fetchTransactions = useCallback(async () => {
         try {
@@ -25,6 +27,22 @@ const CarbonFootprint = () => {
         } catch (error) {
             console.error('Error fetching transactions:', error);
             alert('Failed to fetch transactions. Please try again.');
+        }
+    }, []);
+
+    const fetchRecommendations = useCallback(async () => {
+        setLoading(true);
+        try {
+            const token = localStorage.getItem('jwtToken');
+            const response = await axios.get('/api/recommendations/carbon-footprint', {
+                headers: { Authorization: `Bearer ${token}` },
+            });
+            setRecommendations(response.data.carbonFootprintRecommendations);
+        } catch (error) {
+            console.error('Error fetching recommendations:', error);
+            alert('Failed to fetch recommendations. Please try again.');
+        } finally {
+            setLoading(false);
         }
     }, []);
 
@@ -220,6 +238,17 @@ const CarbonFootprint = () => {
                 <h3>Carbon Footprint by Spending Category</h3>
                 <p>This bar chart shows the carbon emissions associated with each spending category for the current month.</p>
                 <Bar data={barChartData} options={barChartOptions} />
+            </div>
+            <div className="recommendations">
+                <h4>Carbon Footprint Recommendations</h4>
+                <button onClick={fetchRecommendations} className="add-transaction-button" disabled={loading}>
+                    {loading ? <div className="spinner"></div> : (recommendations.length === 0 ? 'Generate Recommendations' : 'Regenerate Recommendations')}
+                </button>
+                <ul>
+                    {recommendations.map((recommendation, index) => (
+                        <li key={index}>{recommendation}</li>
+                    ))}
+                </ul>
             </div>
         </div>
     );

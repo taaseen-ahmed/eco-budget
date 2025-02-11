@@ -21,6 +21,20 @@ public class RecommendationService {
     private final RecommendationRepository recommendationRepository;
     private final AppUserRepository appUserRepository;
 
+    public RecommendationDTO createSpendingResponse(String email) {
+        Recommendation recommendation = getRecommendationsForUser(email);
+        return RecommendationDTO.builder()
+                .spendingRecommendations(recommendation.getSpendingRecommendations())
+                .build();
+    }
+
+    public RecommendationDTO createCarbonFootprintResponse(String email) {
+        Recommendation recommendation = getRecommendationsForUser(email);
+        return RecommendationDTO.builder()
+                .carbonFootprintRecommendations(recommendation.getCarbonFootprintRecommendations())
+                .build();
+    }
+
     public Recommendation getRecommendationsForUser(String email) {
         AppUser appUser = appUserRepository.findByEmail(email)
                 .orElseThrow(() -> new IllegalArgumentException("User not found"));
@@ -30,9 +44,7 @@ public class RecommendationService {
 
         Recommendation recommendation = recommendationRepository.findByAppUserEmail(email).orElse(null);
 
-        boolean shouldRefreshRecommendations = recommendation == null
-                || appUser.isTransactionsUpdated();
-
+        boolean shouldRefreshRecommendations = recommendation == null || appUser.isTransactionsUpdated();
 
         if (!shouldRefreshRecommendations) {
             System.out.println("Using existing recommendations for user: " + email);
@@ -84,25 +96,25 @@ public class RecommendationService {
 
     private String createSpendingPrompt(List<Transaction> transactions) {
         StringBuilder prompt = new StringBuilder("Based on the following transactions, provide 4-5 personalized spending recommendations and tips. "
-                + "Ensure that each recommendation is listed on a new line and starts with a number followed by a period (e.g., '1. Recommendation'). "
+                + "Ensure each recommendation is listed on a new line and starts with a number followed by a period. "
                 + "Transactions are as follows: ");
 
         for (Transaction transaction : transactions) {
             prompt.append(String.format("Category: %s, Amount: %.2f. ", transaction.getCategory(), transaction.getAmount()));
         }
-        prompt.append("Please maintain the numbered format for your response.");
+        prompt.append("Please maintain the numbered format.");
         return prompt.toString();
     }
 
     private String createCarbonFootprintPrompt(List<Transaction> transactions) {
         StringBuilder prompt = new StringBuilder("Based on the following transactions, provide 4-5 carbon footprint reduction recommendations and tips. "
-                + "Ensure that each recommendation is listed on a new line and starts with a number followed by a period (e.g., '1. Tip'). "
+                + "Ensure each recommendation is listed on a new line and starts with a number followed by a period. "
                 + "Transactions are as follows: ");
 
         for (Transaction transaction : transactions) {
             prompt.append(String.format("Category: %s, Carbon Footprint: %.2f. ", transaction.getCategory(), transaction.getCarbonFootprint()));
         }
-        prompt.append("Please maintain the numbered format for your response.");
+        prompt.append("Please maintain the numbered format.");
         return prompt.toString();
     }
 }
