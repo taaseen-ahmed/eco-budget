@@ -264,7 +264,12 @@ const Spending = () => {
     };
 
     const filteredTransactions = transactions.filter((transaction) => {
-        const matchesSearchQuery = transaction.description.toLowerCase().includes(searchQuery.toLowerCase());
+        const matchesSearchQuery =
+            transaction.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            transaction.amount.toString().includes(searchQuery) ||
+            transaction.category.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            transaction.type.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            new Date(transaction.date).toLocaleDateString().includes(searchQuery);
         const matchesFilterType = filterType ? transaction.type === filterType : true;
         const matchesFilterCategory = filterCategory ? transaction.category.name === filterCategory : true;
         return matchesSearchQuery && matchesFilterType && matchesFilterCategory;
