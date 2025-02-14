@@ -30,6 +30,10 @@ const Spending = () => {
     const [individualData, setIndividualData] = useState([]);
     const [recommendations, setRecommendations] = useState([]);
     const [loading, setLoading] = useState(false);
+    const [isFilterPopupVisible, setFilterPopupVisible] = useState(false);
+    const [customStartDate, setCustomStartDate] = useState('');
+    const [customEndDate, setCustomEndDate] = useState('');
+    const [sortOption, setSortOption] = useState('dateDesc');
 
     const resetNewTransaction = () => {
         setNewTransaction({
@@ -272,11 +276,30 @@ const Spending = () => {
             new Date(transaction.date).toLocaleDateString().includes(searchQuery);
         const matchesFilterType = filterType ? transaction.type === filterType : true;
         const matchesFilterCategory = filterCategory ? transaction.category.name === filterCategory : true;
-        return matchesSearchQuery && matchesFilterType && matchesFilterCategory;
+        const matchesCustomDate =
+            (!customStartDate || new Date(transaction.date) >= new Date(customStartDate)) &&
+            (!customEndDate || new Date(transaction.date) <= new Date(customEndDate));
+        return matchesSearchQuery && matchesFilterType && matchesFilterCategory && matchesCustomDate;
     });
 
-    // Sort the filtered transactions by date in descending order
-    const sortedTransactions = filteredTransactions.sort((a, b) => new Date(b.date) - new Date(a.date));
+    const sortedTransactions = filteredTransactions.sort((a, b) => {
+        switch (sortOption) {
+            case 'dateAsc':
+                return new Date(a.date) - new Date(b.date);
+            case 'dateDesc':
+                return new Date(b.date) - new Date(a.date);
+            case 'amountAsc':
+                return parseFloat(a.amount) - parseFloat(b.amount);
+            case 'amountDesc':
+                return parseFloat(b.amount) - parseFloat(a.amount);
+            case 'carbonAsc':
+                return (a.carbonFootprint || 0) - (b.carbonFootprint || 0);
+            case 'carbonDesc':
+                return (b.carbonFootprint || 0) - (a.carbonFootprint || 0);
+            default:
+                return 0;
+        }
+    });
 
     const currentBalance = calculateBalance();
     const balanceClass = currentBalance < 0 ? 'negative-balance' : 'positive-balance'; // Conditional class for balance
@@ -290,6 +313,10 @@ const Spending = () => {
 
     const filteredTransactionsByPeriod = filterTransactionsByPeriod(transactions, selectedPeriod);
     const totalExpense = calculateTotalExpense(filteredTransactionsByPeriod);
+
+    const handleFilterButtonClick = () => {
+        setFilterPopupVisible(true);
+    };
 
     return (
         <div className="spending-container">
@@ -311,30 +338,9 @@ const Spending = () => {
                         onChange={(e) => setSearchQuery(e.target.value)}
                         className="search-bar"
                     />
-                    <select
-                        value={filterType}
-                        onChange={(e) => setFilterType(e.target.value)}
-                        className="filter-dropdown"
-                    >
-                        <option value="">All Types</option>
-                        {transactionTypes.map((type, index) => (
-                            <option key={index} value={type}>
-                                {type}
-                            </option>
-                        ))}
-                    </select>
-                    <select
-                        value={filterCategory}
-                        onChange={(e) => setFilterCategory(e.target.value)}
-                        className="filter-dropdown"
-                    >
-                        <option value="">All Categories</option>
-                        {categories.map((category) => (
-                            <option key={category.id} value={category.name}>
-                                {category.name}
-                            </option>
-                        ))}
-                    </select>
+                    <button onClick={handleFilterButtonClick} className="add-transaction-button">
+                        Filter & Sort Transactions
+                    </button>
                 </div>
 
                 <div className="transaction-list">
@@ -531,6 +537,68 @@ const Spending = () => {
                                     className="cancel-button"
                                 >
                                     Cancel
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
+            {isFilterPopupVisible && (
+                <div className="popup">
+                    <div className="popup-card">
+                        <h3 className="popup-title">Filter & Sort Transactions</h3>
+                        <form className="popup-form">
+                            <select
+                                value={filterType}
+                                onChange={(e) => setFilterType(e.target.value)}
+                                className="input-field"
+                            >
+                                <option value="">All Types</option>
+                                {transactionTypes.map((type, index) => (
+                                    <option key={index} value={type}>
+                                        {type}
+                                    </option>
+                                ))}
+                            </select>
+                            <select
+                                value={filterCategory}
+                                onChange={(e) => setFilterCategory(e.target.value)}
+                                className="input-field"
+                            >
+                                <option value="">All Categories</option>
+                                {categories.map((category) => (
+                                    <option key={category.id} value={category.name}>
+                                        {category.name}
+                                    </option>
+                                ))}
+                            </select>
+                            <input
+                                type="date"
+                                value={customStartDate}
+                                onChange={(e) => setCustomStartDate(e.target.value)}
+                                className="input-field"
+                            />
+                            <input
+                                type="date"
+                                value={customEndDate}
+                                onChange={(e) => setCustomEndDate(e.target.value)}
+                                className="input-field"
+                            />
+                            <select
+                                value={sortOption}
+                                onChange={(e) => setSortOption(e.target.value)}
+                                className="input-field"
+                            >
+                                <option value="dateDesc">Most Recent</option>
+                                <option value="dateAsc">Oldest First</option>
+                                <option value="amountAsc">Amount Ascending</option>
+                                <option value="amountDesc">Amount Descending</option>
+                                <option value="carbonAsc">Carbon Footprint Ascending</option>
+                                <option value="carbonDesc">Carbon Footprint Descending</option>
+                            </select>
+                            <div className="popup-buttons">
+                                <button type="button" onClick={() => setFilterPopupVisible(false)} className="cancel-button">
+                                    Close
                                 </button>
                             </div>
                         </form>
