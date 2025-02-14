@@ -380,6 +380,7 @@
 
 .filters {
     display: flex;
+    align-items: center;
     gap: 10px;
     margin-bottom: 20px;
 }
@@ -392,6 +393,7 @@
     width: 100%;
     box-sizing: border-box;
     transition: border-color 0.3s, box-shadow 0.3s;
+    height: 45px;
 }
 
 .search-bar:focus {

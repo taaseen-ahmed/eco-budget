@@ -25,7 +25,7 @@ const Spending = () => {
     const [filterType, setFilterType] = useState('');
     const [filterCategory, setFilterCategory] = useState('');
     const [selectedPeriod, setSelectedPeriod] = useState('currentMonth');
-    const [selectedCategory, setSelectedCategory] = useState('All'); // New state for selected category
+    const [selectedCategory] = useState('All'); // New state for selected category
     const [cumulativeData, setCumulativeData] = useState([]);
     const [individualData, setIndividualData] = useState([]);
     const [recommendations, setRecommendations] = useState([]);
@@ -198,29 +198,40 @@ const Spending = () => {
         setNewTransaction({ ...newTransaction, [name]: value });
     };
 
-    const filterTransactionsByPeriod = (transactions, period) => {
+    const filterTransactionsByPeriod = (transactions, period, customStartDate, customEndDate) => {
         const now = new Date();
-        let startDate;
+        let startDate, endDate;
 
         switch (period) {
             case 'currentMonth':
                 startDate = new Date(now.getFullYear(), now.getMonth(), 1);
+                endDate = now;
                 break;
             case 'lastMonth':
                 startDate = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+                endDate = new Date(now.getFullYear(), now.getMonth(), 0);
                 break;
             case 'last3Months':
                 startDate = new Date(now.getFullYear(), now.getMonth() - 3, 1);
+                endDate = now;
+                break;
+            case 'custom':
+                startDate = new Date(customStartDate);
+                endDate = new Date(customEndDate);
                 break;
             default:
                 startDate = new Date(now.getFullYear(), now.getMonth(), 1);
+                endDate = now;
         }
 
-        return transactions.filter(transaction => new Date(transaction.date) >= startDate);
+        return transactions.filter(transaction => {
+            const transactionDate = new Date(transaction.date);
+            return transactionDate >= startDate && transactionDate <= endDate;
+        });
     };
 
     const calculateCumulativeData = useCallback((transactions) => {
-        const filteredTransactions = filterTransactionsByPeriod(transactions, selectedPeriod)
+        const filteredTransactions = filterTransactionsByPeriod(transactions, selectedPeriod, customStartDate, customEndDate)
             .filter(transaction => transaction.type === "Expense" && (selectedCategory === 'All' || transaction.category.name === selectedCategory));
         const sortedTransactions = [...filteredTransactions].sort((a, b) => new Date(a.date) - new Date(b.date));
         let cumulativeSum = 0;
@@ -234,11 +245,11 @@ const Spending = () => {
         }));
         setCumulativeData(cumulative);
         setIndividualData(individual);
-    }, [selectedPeriod, selectedCategory]);
+    }, [selectedPeriod, selectedCategory, customStartDate, customEndDate]);
 
     useEffect(() => {
         calculateCumulativeData(transactions);
-    }, [transactions, selectedPeriod, selectedCategory, calculateCumulativeData]);
+    }, [transactions, selectedPeriod, selectedCategory, customStartDate, customEndDate, calculateCumulativeData]);
 
     const chartData = {
         labels: cumulativeData.map(data => new Date(data.date).toLocaleDateString()),
@@ -275,11 +286,12 @@ const Spending = () => {
             transaction.type.toLowerCase().includes(searchQuery.toLowerCase()) ||
             new Date(transaction.date).toLocaleDateString().includes(searchQuery);
         const matchesFilterType = filterType ? transaction.type === filterType : true;
-        const matchesFilterCategory = filterCategory ? transaction.category.name === filterCategory : true;
+        const matchesFilterCategory = selectedCategory === 'All' || transaction.category.name === selectedCategory;
         const matchesCustomDate =
             (!customStartDate || new Date(transaction.date) >= new Date(customStartDate)) &&
             (!customEndDate || new Date(transaction.date) <= new Date(customEndDate));
-        return matchesSearchQuery && matchesFilterType && matchesFilterCategory && matchesCustomDate;
+        const matchesPeriod = filterTransactionsByPeriod([transaction], selectedPeriod, customStartDate, customEndDate).length > 0;
+        return matchesSearchQuery && matchesFilterType && matchesFilterCategory && matchesCustomDate && matchesPeriod;
     });
 
     const sortedTransactions = filteredTransactions.sort((a, b) => {
@@ -384,29 +396,6 @@ const Spending = () => {
                     <div className={`balance ${balanceClass}`}>
                         <h3>Current Balance: £{currentBalance}</h3>
                     </div>
-
-                    <select
-                        value={selectedPeriod}
-                        onChange={(e) => setSelectedPeriod(e.target.value)}
-                        className="period-dropdown"
-                    >
-                        <option value="currentMonth">Current Month</option>
-                        <option value="lastMonth">Last Month</option>
-                        <option value="last3Months">Last 3 Months</option>
-                    </select>
-
-                    <select
-                        value={selectedCategory}
-                        onChange={(e) => setSelectedCategory(e.target.value)}
-                        className="category-dropdown"
-                    >
-                        <option value="All">All Categories</option>
-                        {categories.map((category) => (
-                            <option key={category.id} value={category.name}>
-                                {category.name}
-                            </option>
-                        ))}
-                    </select>
 
                     <div className="total-expense">
                         <h4>Total Expense for Selected Period: £{totalExpense}</h4>
@@ -572,18 +561,32 @@ const Spending = () => {
                                     </option>
                                 ))}
                             </select>
-                            <input
-                                type="date"
-                                value={customStartDate}
-                                onChange={(e) => setCustomStartDate(e.target.value)}
+                            <select
+                                value={selectedPeriod}
+                                onChange={(e) => setSelectedPeriod(e.target.value)}
                                 className="input-field"
-                            />
-                            <input
-                                type="date"
-                                value={customEndDate}
-                                onChange={(e) => setCustomEndDate(e.target.value)}
-                                className="input-field"
-                            />
+                            >
+                                <option value="currentMonth">Current Month</option>
+                                <option value="lastMonth">Last Month</option>
+                                <option value="last3Months">Last 3 Months</option>
+                                <option value="custom">Custom</option>
+                            </select>
+                            {selectedPeriod === 'custom' && (
+                                <>
+                                    <input
+                                        type="date"
+                                        value={customStartDate}
+                                        onChange={(e) => setCustomStartDate(e.target.value)}
+                                        className="input-field"
+                                    />
+                                    <input
+                                        type="date"
+                                        value={customEndDate}
+                                        onChange={(e) => setCustomEndDate(e.target.value)}
+                                        className="input-field"
+                                    />
+                                </>
+                            )}
                             <select
                                 value={sortOption}
                                 onChange={(e) => setSortOption(e.target.value)}
