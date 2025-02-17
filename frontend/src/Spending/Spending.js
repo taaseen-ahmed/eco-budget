@@ -1,11 +1,11 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { FaEdit, FaTrash } from 'react-icons/fa';
 import axios from 'axios';
-import { Line } from 'react-chartjs-2';
-import { Chart as ChartJS, CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend } from 'chart.js';
+import { Line, Pie } from 'react-chartjs-2';
+import { Chart as ChartJS, CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend, ArcElement } from 'chart.js';
 import './Spending.css';
 
-ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend);
+ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend, ArcElement);
 
 const Spending = () => {
     const [categories, setCategories] = useState([]);
@@ -330,6 +330,38 @@ const Spending = () => {
         setFilterPopupVisible(true);
     };
 
+    const calculateSpendingDistribution = (transactions) => {
+        const filteredTransactions = filterTransactionsByPeriod(transactions, selectedPeriod, customStartDate, customEndDate)
+            .filter(transaction => transaction.type === "Expense" && (selectedCategory === 'All' || transaction.category.name === selectedCategory));
+
+        const categoryTotals = filteredTransactions.reduce((acc, transaction) => {
+            const category = transaction.category.name;
+            acc[category] = (acc[category] || 0) + parseFloat(transaction.amount);
+            return acc;
+        }, {});
+
+        const labels = Object.keys(categoryTotals);
+        const data = Object.values(categoryTotals);
+
+        return {
+            labels,
+            datasets: [{
+                data,
+                backgroundColor: labels.map((_, index) => `hsl(${index * 360 / labels.length}, 70%, 50%)`),
+            }],
+        };
+    };
+
+    const spendingDistributionData = calculateSpendingDistribution(transactions);
+
+    const pieChartOptions = {
+        plugins: {
+            legend: {
+                display: false
+            }
+        }
+    };
+
     return (
         <div className="spending-container">
             <div className="left-container">
@@ -403,6 +435,23 @@ const Spending = () => {
 
                     <div className="spending-chart">
                         <Line data={chartData} options={chartOptions} />
+                    </div>
+
+                    <div className="spending-distribution-chart">
+                        <h3>Your Spending Distribution</h3>
+                        <div className="chart-and-labels-container">
+                            <div className="chart-container">
+                                <Pie data={spendingDistributionData} options={pieChartOptions} />
+                            </div>
+                            <div className="category-labels">
+                                {spendingDistributionData.labels.map((label, index) => (
+                                    <div key={index} className="category-label">
+                                        <div className="category-color" style={{ backgroundColor: spendingDistributionData.datasets[0].backgroundColor[index] }}></div>
+                                        {label}
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
                     </div>
 
                     <div className="recommendations">

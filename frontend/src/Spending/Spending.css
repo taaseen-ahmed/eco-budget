@@ -434,6 +434,60 @@
     vertical-align: middle;
 }
 
+.spending-distribution-chart {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-top: 20px;
+    padding: 20px;
+    border: 1px;
+    border-radius: 8px;
+    background-color: var(--light-gray);
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    transition: box-shadow 0.3s ease;
+    height: 400px;
+}
+
+.chart-and-labels-container {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+}
+
+.spending-distribution-chart h3 {
+    margin-bottom: 20px;
+    color: black;
+    font-size: 1.5rem;
+    text-align: center;
+}
+
+.spending-distribution-chart canvas {
+    max-width: 100%;
+    height: auto;
+}
+
+.category-labels {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-left: 20px;
+}
+
+.category-label {
+    font-size: 1rem;
+    color: var(--text-color);
+    display: flex;
+    align-items: center;
+}
+
+.category-color {
+    width: 20px;
+    height: 20px;
+    margin-right: 10px;
+    border-radius: 50%;
+}
+
 @keyframes spin {
     to {
         transform: rotate(360deg);
