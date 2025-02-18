@@ -25,6 +25,7 @@
 .total-carbon-footprint {
     text-align: center;
     margin-top: 20px;
+    margin-bottom: 20px;
     padding: 20px;
     background-color: var(--light-gray);
     border-radius: 8px;

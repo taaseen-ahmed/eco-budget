@@ -99,13 +99,13 @@ const CarbonFootprint = () => {
         });
     }, [selectedCategory, customStartDate, customEndDate]);
 
-    const calculateTotalCarbonFootprint = useCallback((transactions) => {
-        const filteredTransactions = filterTransactions(transactions, selectedPeriod);
+    const calculateTotalCarbonFootprint = useCallback((transactions, period) => {
+        const filteredTransactions = filterTransactions(transactions, period);
         const total = filteredTransactions.reduce((sum, transaction) => {
             return sum + (transaction.carbonFootprint || 0);
         }, 0);
         setTotalCarbonFootprint(total.toFixed(2));
-    }, [filterTransactions, selectedPeriod]);
+    }, [filterTransactions]);
 
     const calculateCumulativeData = useCallback((transactions, period, setData) => {
         const filteredTransactions = filterTransactions(transactions, period);
@@ -144,7 +144,7 @@ const CarbonFootprint = () => {
     }, [fetchTransactions, fetchCategories]);
 
     useEffect(() => {
-        calculateTotalCarbonFootprint(transactions);
+        calculateTotalCarbonFootprint(transactions, selectedPeriod);
         calculateCumulativeData(transactions, selectedPeriod, setCumulativeData);
         if (selectedPeriod === 'currentMonth') {
             calculateCumulativeData(transactions, 'lastMonth', setPreviousMonthData);
@@ -263,7 +263,7 @@ const CarbonFootprint = () => {
                 <p>This line chart shows the cumulative total of your carbon emissions over time based on your spending transactions.</p>
                 <button onClick={() => setFilterPopupVisible(true)} className="filter-button">Filter</button>
                 <div className="total-carbon-footprint">
-                    <h3>Total Carbon Footprint for Current Month: {totalCarbonFootprint} kg CO2</h3>
+                    <h3>Total Carbon Footprint for {selectedPeriod === 'currentMonth' ? 'Current Month' : selectedPeriod === 'lastMonth' ? 'Last Month' : selectedPeriod === 'last3Months' ? 'Last 3 Months' : 'Custom Period'}: {totalCarbonFootprint} kg CO2</h3>
                 </div>
                 <Line data={lineChartData} options={lineChartOptions} />
             </div>
