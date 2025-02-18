@@ -81,7 +81,7 @@ const CarbonFootprint = () => {
         let cumulativeSum = 0;
         const cumulative = sortedTransactions.map(transaction => {
             cumulativeSum += transaction.carbonFootprint || 0;
-            return { date: transaction.date, cumulativeSum, individualFootprint: transaction.carbonFootprint || 0 };
+            return { day: new Date(transaction.date).getDate(), cumulativeSum, individualFootprint: transaction.carbonFootprint || 0 };
         });
 
         if (monthOffset === 0) {
@@ -129,18 +129,18 @@ const CarbonFootprint = () => {
     }, [transactions]);
 
     const lineChartData = {
-        labels: cumulativeData.map(data => new Date(data.date)),
+        labels: Array.from({ length: 31 }, (_, i) => i + 1),
         datasets: [
             {
                 label: 'Current Month Carbon Footprint (kg CO2)',
-                data: cumulativeData.map(data => ({ x: new Date(data.date).getDate(), y: data.cumulativeSum, individualFootprint: data.individualFootprint })),
+                data: cumulativeData.map(data => ({ x: data.day, y: data.cumulativeSum, individualFootprint: data.individualFootprint })),
                 fill: false,
                 backgroundColor: 'rgba(75,192,192,0.4)',
                 borderColor: 'rgba(75,192,192,1)',
             },
             comparePreviousMonth && {
                 label: 'Previous Month Carbon Footprint (kg CO2)',
-                data: previousMonthData.map(data => ({ x: new Date(data.date).getDate(), y: data.cumulativeSum, individualFootprint: data.individualFootprint })),
+                data: previousMonthData.map(data => ({ x: data.day, y: data.cumulativeSum, individualFootprint: data.individualFootprint })),
                 fill: false,
                 backgroundColor: 'rgba(255,99,132,0.4)',
                 borderColor: 'rgba(255,99,132,1)',
@@ -166,6 +166,9 @@ const CarbonFootprint = () => {
                 title: {
                     display: true,
                     text: 'Day of the Month',
+                },
+                ticks: {
+                    stepSize: 1,
                 },
             },
             y: {
