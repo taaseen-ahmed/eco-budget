@@ -9,6 +9,7 @@ ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, BarEleme
 
 const CarbonFootprint = () => {
     const [transactions, setTransactions] = useState([]);
+    const [categories, setCategories] = useState([]);
     const [totalCarbonFootprint, setTotalCarbonFootprint] = useState(0);
     const [cumulativeData, setCumulativeData] = useState([]);
     const [categoryBreakdown, setCategoryBreakdown] = useState([]);
@@ -16,6 +17,10 @@ const CarbonFootprint = () => {
     const [comparePreviousMonth, setComparePreviousMonth] = useState(false);
     const [recommendations, setRecommendations] = useState([]);
     const [loading, setLoading] = useState(false);
+    const [selectedCategory, setSelectedCategory] = useState('');
+    const [selectedPeriod, setSelectedPeriod] = useState('currentMonth');
+    const [customStartDate, setCustomStartDate] = useState('');
+    const [customEndDate, setCustomEndDate] = useState('');
 
     const fetchTransactions = useCallback(async () => {
         try {
@@ -27,6 +32,19 @@ const CarbonFootprint = () => {
         } catch (error) {
             console.error('Error fetching transactions:', error);
             alert('Failed to fetch transactions. Please try again.');
+        }
+    }, []);
+
+    const fetchCategories = useCallback(async () => {
+        try {
+            const token = localStorage.getItem('jwtToken');
+            const response = await axios.get('/api/categories', {
+                headers: { Authorization: `Bearer ${token}` },
+            });
+            setCategories(response.data);
+        } catch (error) {
+            console.error('Error fetching categories:', error);
+            alert('Failed to fetch categories. Please try again.');
         }
     }, []);
 
@@ -46,60 +64,62 @@ const CarbonFootprint = () => {
         }
     }, []);
 
-    const calculateTotalCarbonFootprint = (transactions) => {
-        const currentMonth = new Date().getMonth();
-        const currentYear = new Date().getFullYear();
+    const filterTransactions = useCallback((transactions, period) => {
+        const currentDate = new Date();
+        let startDate, endDate;
 
-        const filteredTransactions = transactions.filter(transaction => {
+        switch (period) {
+            case 'currentMonth':
+                startDate = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
+                endDate = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0);
+                break;
+            case 'lastMonth':
+                startDate = new Date(currentDate.getFullYear(), currentDate.getMonth() - 1, 1);
+                endDate = new Date(currentDate.getFullYear(), currentDate.getMonth(), 0);
+                break;
+            case 'last3Months':
+                startDate = new Date(currentDate.getFullYear(), currentDate.getMonth() - 2, 1);
+                endDate = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0);
+                break;
+            case 'custom':
+                startDate = new Date(customStartDate);
+                endDate = new Date(customEndDate);
+                break;
+            default:
+                startDate = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
+                endDate = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0);
+        }
+
+        return transactions.filter(transaction => {
             const transactionDate = new Date(transaction.date);
-            return transactionDate.getMonth() === currentMonth && transactionDate.getFullYear() === currentYear && transaction.type !== 'Income';
+            const isWithinDateRange = transactionDate >= startDate && transactionDate <= endDate;
+            const isWithinCategory = selectedCategory ? transaction.category?.name === selectedCategory : true;
+            return isWithinDateRange && isWithinCategory && transaction.type !== 'Income';
         });
+    }, [selectedCategory, customStartDate, customEndDate]);
 
+    const calculateTotalCarbonFootprint = useCallback((transactions) => {
+        const filteredTransactions = filterTransactions(transactions, selectedPeriod);
         const total = filteredTransactions.reduce((sum, transaction) => {
             return sum + (transaction.carbonFootprint || 0);
         }, 0);
-
         setTotalCarbonFootprint(total.toFixed(2));
-    };
+    }, [filterTransactions, selectedPeriod]);
 
-    const calculateCumulativeData = (transactions, monthOffset = 0) => {
-        const currentDate = new Date();
-        let targetMonth = currentDate.getMonth() - monthOffset;
-        let targetYear = currentDate.getFullYear();
-
-        if (targetMonth < 0) {
-            targetMonth += 12;
-            targetYear -= 1;
-        }
-
-        const filteredTransactions = transactions.filter(transaction => {
-            const transactionDate = new Date(transaction.date);
-            return transactionDate.getMonth() === targetMonth && transactionDate.getFullYear() === targetYear && transaction.type !== 'Income';
-        });
-
+    const calculateCumulativeData = useCallback((transactions, period, setData) => {
+        const filteredTransactions = filterTransactions(transactions, period);
         const sortedTransactions = [...filteredTransactions].sort((a, b) => new Date(a.date) - new Date(b.date));
         let cumulativeSum = 0;
         const cumulative = sortedTransactions.map(transaction => {
             cumulativeSum += transaction.carbonFootprint || 0;
-            return { day: new Date(transaction.date).getDate(), cumulativeSum, individualFootprint: transaction.carbonFootprint || 0 };
+            return { date: new Date(transaction.date), day: new Date(transaction.date).getDate(), cumulativeSum, individualFootprint: transaction.carbonFootprint || 0 };
         });
 
-        if (monthOffset === 0) {
-            setCumulativeData(cumulative);
-        } else {
-            setPreviousMonthData(cumulative);
-        }
-    };
+        setData(cumulative);
+    }, [filterTransactions]);
 
-    const calculateCategoryBreakdown = (transactions) => {
-        const currentMonth = new Date().getMonth();
-        const currentYear = new Date().getFullYear();
-
-        const filteredTransactions = transactions.filter(transaction => {
-            const transactionDate = new Date(transaction.date);
-            return transactionDate.getMonth() === currentMonth && transactionDate.getFullYear() === currentYear && transaction.type !== 'Income';
-        });
-
+    const calculateCategoryBreakdown = useCallback((transactions) => {
+        const filteredTransactions = filterTransactions(transactions, selectedPeriod);
         const tempBreakdown = filteredTransactions.reduce((acc, transaction) => {
             const categoryName = transaction.category?.name || 'Uncategorized';
             if (!acc[categoryName]) {
@@ -115,25 +135,28 @@ const CarbonFootprint = () => {
         }));
 
         setCategoryBreakdown(breakdownArray);
-    };
+    }, [filterTransactions, selectedPeriod]);
 
     useEffect(() => {
         fetchTransactions();
-    }, [fetchTransactions]);
+        fetchCategories();
+    }, [fetchTransactions, fetchCategories]);
 
     useEffect(() => {
         calculateTotalCarbonFootprint(transactions);
-        calculateCumulativeData(transactions);
-        calculateCumulativeData(transactions, 1); // Fetch previous month data
+        calculateCumulativeData(transactions, selectedPeriod, setCumulativeData);
+        if (selectedPeriod === 'currentMonth') {
+            calculateCumulativeData(transactions, 'lastMonth', setPreviousMonthData);
+        }
         calculateCategoryBreakdown(transactions);
-    }, [transactions]);
+    }, [transactions, selectedCategory, selectedPeriod, customStartDate, customEndDate, calculateTotalCarbonFootprint, calculateCumulativeData, calculateCategoryBreakdown]);
 
     const lineChartData = {
-        labels: Array.from({ length: 31 }, (_, i) => i + 1),
+        labels: comparePreviousMonth ? Array.from({ length: 31 }, (_, i) => i + 1) : cumulativeData.map(data => data.date),
         datasets: [
             {
                 label: 'Current Month Carbon Footprint (kg CO2)',
-                data: cumulativeData.map(data => ({ x: data.day, y: data.cumulativeSum, individualFootprint: data.individualFootprint })),
+                data: comparePreviousMonth ? cumulativeData.map(data => ({ x: data.day, y: data.cumulativeSum, individualFootprint: data.individualFootprint })) : cumulativeData.map(data => ({ x: data.date, y: data.cumulativeSum, individualFootprint: data.individualFootprint })),
                 fill: false,
                 backgroundColor: 'rgba(75,192,192,0.4)',
                 borderColor: 'rgba(75,192,192,1)',
@@ -161,7 +184,7 @@ const CarbonFootprint = () => {
             }
         },
         scales: {
-            x: {
+            x: comparePreviousMonth ? {
                 type: 'linear',
                 title: {
                     display: true,
@@ -169,6 +192,21 @@ const CarbonFootprint = () => {
                 },
                 ticks: {
                     stepSize: 1,
+                },
+            } : {
+                type: 'time',
+                time: {
+                    unit: 'day',
+                    tooltipFormat: 'MMM d',
+                    displayFormats: {
+                        day: 'MMM d',
+                        week: 'MMM d',
+                        month: 'MMM yyyy',
+                    },
+                },
+                title: {
+                    display: true,
+                    text: 'Date',
                 },
             },
             y: {
@@ -219,18 +257,52 @@ const CarbonFootprint = () => {
                 <h2>Carbon Footprint</h2>
                 <p>Track your carbon footprint and see the impact of your everyday spending!</p>
             </div>
+            <div className="filters">
+                <select value={selectedCategory} onChange={(e) => setSelectedCategory(e.target.value)} className="input-field">
+                    <option value="">All Categories</option>
+                    {categories.map((category) => (
+                        <option key={category.id} value={category.name}>
+                            {category.name}
+                        </option>
+                    ))}
+                </select>
+                <select value={selectedPeriod} onChange={(e) => setSelectedPeriod(e.target.value)} className="input-field">
+                    <option value="currentMonth">Current Month</option>
+                    <option value="lastMonth">Last Month</option>
+                    <option value="last3Months">Last 3 Months</option>
+                    <option value="custom">Custom</option>
+                </select>
+                {selectedPeriod === 'custom' && (
+                    <>
+                        <input
+                            type="date"
+                            value={customStartDate}
+                            onChange={(e) => setCustomStartDate(e.target.value)}
+                            className="input-field"
+                        />
+                        <input
+                            type="date"
+                            value={customEndDate}
+                            onChange={(e) => setCustomEndDate(e.target.value)}
+                            className="input-field"
+                        />
+                    </>
+                )}
+            </div>
+            {selectedPeriod === 'currentMonth' && (
+                <div className="toggle-container">
+                    <label>
+                        <input
+                            type="checkbox"
+                            checked={comparePreviousMonth}
+                            onChange={() => setComparePreviousMonth(!comparePreviousMonth)}
+                        />
+                        Compare with Previous Month
+                    </label>
+                </div>
+            )}
             <div className="total-carbon-footprint">
                 <h3>Total Carbon Footprint for Current Month: {totalCarbonFootprint} kg CO2</h3>
-            </div>
-            <div className="toggle-container">
-                <label>
-                    <input
-                        type="checkbox"
-                        checked={comparePreviousMonth}
-                        onChange={() => setComparePreviousMonth(!comparePreviousMonth)}
-                    />
-                    Compare with Previous Month
-                </label>
             </div>
             <div className="carbon-footprint-chart">
                 <h3>Cumulative Carbon Footprint Over Time</h3>
