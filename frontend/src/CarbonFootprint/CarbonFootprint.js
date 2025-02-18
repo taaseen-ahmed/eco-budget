@@ -21,6 +21,7 @@ const CarbonFootprint = () => {
     const [selectedPeriod, setSelectedPeriod] = useState('currentMonth');
     const [customStartDate, setCustomStartDate] = useState('');
     const [customEndDate, setCustomEndDate] = useState('');
+    const [isFilterPopupVisible, setFilterPopupVisible] = useState(false);
 
     const fetchTransactions = useCallback(async () => {
         try {
@@ -257,56 +258,13 @@ const CarbonFootprint = () => {
                 <h2>Carbon Footprint</h2>
                 <p>Track your carbon footprint and see the impact of your everyday spending!</p>
             </div>
-            <div className="filters">
-                <select value={selectedCategory} onChange={(e) => setSelectedCategory(e.target.value)} className="input-field">
-                    <option value="">All Categories</option>
-                    {categories.map((category) => (
-                        <option key={category.id} value={category.name}>
-                            {category.name}
-                        </option>
-                    ))}
-                </select>
-                <select value={selectedPeriod} onChange={(e) => setSelectedPeriod(e.target.value)} className="input-field">
-                    <option value="currentMonth">Current Month</option>
-                    <option value="lastMonth">Last Month</option>
-                    <option value="last3Months">Last 3 Months</option>
-                    <option value="custom">Custom</option>
-                </select>
-                {selectedPeriod === 'custom' && (
-                    <>
-                        <input
-                            type="date"
-                            value={customStartDate}
-                            onChange={(e) => setCustomStartDate(e.target.value)}
-                            className="input-field"
-                        />
-                        <input
-                            type="date"
-                            value={customEndDate}
-                            onChange={(e) => setCustomEndDate(e.target.value)}
-                            className="input-field"
-                        />
-                    </>
-                )}
-            </div>
-            {selectedPeriod === 'currentMonth' && (
-                <div className="toggle-container">
-                    <label>
-                        <input
-                            type="checkbox"
-                            checked={comparePreviousMonth}
-                            onChange={() => setComparePreviousMonth(!comparePreviousMonth)}
-                        />
-                        Compare with Previous Month
-                    </label>
-                </div>
-            )}
-            <div className="total-carbon-footprint">
-                <h3>Total Carbon Footprint for Current Month: {totalCarbonFootprint} kg CO2</h3>
-            </div>
             <div className="carbon-footprint-chart">
                 <h3>Cumulative Carbon Footprint Over Time</h3>
                 <p>This line chart shows the cumulative total of your carbon emissions over time based on your spending transactions.</p>
+                <button onClick={() => setFilterPopupVisible(true)} className="filter-button">Filter</button>
+                <div className="total-carbon-footprint">
+                    <h3>Total Carbon Footprint for Current Month: {totalCarbonFootprint} kg CO2</h3>
+                </div>
                 <Line data={lineChartData} options={lineChartOptions} />
             </div>
             <div className="category-breakdown">
@@ -325,6 +283,63 @@ const CarbonFootprint = () => {
                     ))}
                 </ul>
             </div>
+            {isFilterPopupVisible && (
+                <div className="popup">
+                    <div className="popup-card">
+                        <h3 className="popup-title">Filter & Sort</h3>
+                        <form className="popup-form">
+                            <select value={selectedCategory} onChange={(e) => setSelectedCategory(e.target.value)} className="input-field">
+                                <option value="">All Categories</option>
+                                {categories.map((category) => (
+                                    <option key={category.id} value={category.name}>
+                                        {category.name}
+                                    </option>
+                                ))}
+                            </select>
+                            <select value={selectedPeriod} onChange={(e) => setSelectedPeriod(e.target.value)} className="input-field">
+                                <option value="currentMonth">Current Month</option>
+                                <option value="lastMonth">Last Month</option>
+                                <option value="last3Months">Last 3 Months</option>
+                                <option value="custom">Custom</option>
+                            </select>
+                            {selectedPeriod === 'custom' && (
+                                <>
+                                    <input
+                                        type="date"
+                                        value={customStartDate}
+                                        onChange={(e) => setCustomStartDate(e.target.value)}
+                                        className="input-field"
+                                    />
+                                    <input
+                                        type="date"
+                                        value={customEndDate}
+                                        onChange={(e) => setCustomEndDate(e.target.value)}
+                                        className="input-field"
+                                    />
+                                </>
+                            )}
+                            {selectedPeriod === 'currentMonth' && (
+                                <div className="toggle-container">
+                                    <label className="switch">
+                                        <input
+                                            type="checkbox"
+                                            checked={comparePreviousMonth}
+                                            onChange={() => setComparePreviousMonth(!comparePreviousMonth)}
+                                        />
+                                        <span className="slider round"></span>
+                                    </label>
+                                    <span className="toggle-label">Compare with Previous Month</span>
+                                </div>
+                            )}
+                            <div className="popup-buttons">
+                                <button type="button" onClick={() => setFilterPopupVisible(false)} className="cancel-button">
+                                    Close
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };
