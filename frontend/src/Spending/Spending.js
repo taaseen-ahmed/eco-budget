@@ -426,15 +426,16 @@ const Spending = () => {
             <div className="right-container">
                 <div className="balance-and-chart">
                     <div className={`balance ${balanceClass}`}>
-                        <h3>Current Balance: £{currentBalance}</h3>
+                        <h3>Your Current Balance: £{currentBalance}</h3>
+                    </div>
+
+                    <div className="spending-chart">
+                        <h3 className="chart-title">Cumulative Spending Over Time</h3>
+                        <Line data={chartData} options={chartOptions} />
                     </div>
 
                     <div className="total-expense">
                         <h4>Total Expense for Selected Period: £{totalExpense}</h4>
-                    </div>
-
-                    <div className="spending-chart">
-                        <Line data={chartData} options={chartOptions} />
                     </div>
 
                     <div className="spending-distribution-chart">

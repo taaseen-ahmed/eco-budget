@@ -19,6 +19,7 @@
     background-color: var(--light-gray);
     border-radius: 8px;
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    margin-top: 10px
 }
 
 
@@ -33,6 +34,45 @@
 .balance-and-chart {
     position: relative;
     padding-top: 5px;
+}
+
+.balance, .total-expense {
+    background: var(--light-gray);
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    padding: 20px;
+    margin: 20px 0;
+    text-align: center;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.balance h3, .total-expense h4 {
+    margin: 0;
+    font-size: 1.5em;
+    color: #333;
+}
+
+.balance.positive-balance h3 {
+    color: #4caf50;
+}
+
+.balance.negative-balance h3 {
+    color: #f44336;
+}
+
+.total-expense h4 {
+    color: #ff9800;
+}
+
+.balance {
+    margin-bottom: 10px; /* Reduce this value to decrease the space */
+}
+
+.chart-title {
+    font-size: 1.5rem;
+    color: #333;
+    text-align: center;
+    margin-bottom: 10px;
 }
 
 .right-container {
