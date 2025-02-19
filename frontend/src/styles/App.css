@@ -118,3 +118,53 @@ body {
   width: 100%;
   margin-top: auto;
 }
+
+/* Header Styles */
+.header {
+  text-align: center;
+  margin: 2.5rem auto 3rem;
+  max-width: 36rem;
+  padding: 0 1rem;
+}
+
+.header h2 {
+  color: #1a1a1a;
+  font-size: 2.25rem;
+  font-weight: 700;
+  line-height: 1.2;
+  margin-bottom: 0.75rem;
+  background: linear-gradient(to right, #1a1a1a, #4a4a4a);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: fadeIn 0.8s ease-out;
+}
+
+.header p {
+  color: #6b7280;
+  font-size: 1.125rem;
+  line-height: 1.6;
+  font-weight: 400;
+  max-width: 32rem;
+  margin: 0 auto;
+  animation: slideUp 0.8s ease-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
