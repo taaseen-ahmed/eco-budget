@@ -1,7 +1,7 @@
 import React, { useCallback, useState, useEffect } from 'react';
 import './CarbonFootprint.css';
 import axios from 'axios';
-import { Line, Bar } from 'react-chartjs-2';
+import { Line, Pie } from 'react-chartjs-2';
 import { Chart as ChartJS, CategoryScale, LinearScale, PointElement, LineElement, BarElement, Title, Tooltip, Legend, TimeScale } from 'chart.js';
 import 'chartjs-adapter-date-fns';
 
@@ -12,7 +12,6 @@ const CarbonFootprint = () => {
     const [categories, setCategories] = useState([]);
     const [totalCarbonFootprint, setTotalCarbonFootprint] = useState(0);
     const [cumulativeData, setCumulativeData] = useState([]);
-    const [categoryBreakdown, setCategoryBreakdown] = useState([]);
     const [previousMonthData, setPreviousMonthData] = useState([]);
     const [comparePreviousMonth, setComparePreviousMonth] = useState(false);
     const [recommendations, setRecommendations] = useState([]);
@@ -119,25 +118,6 @@ const CarbonFootprint = () => {
         setData(cumulative);
     }, [filterTransactions]);
 
-    const calculateCategoryBreakdown = useCallback((transactions) => {
-        const filteredTransactions = filterTransactions(transactions, selectedPeriod);
-        const tempBreakdown = filteredTransactions.reduce((acc, transaction) => {
-            const categoryName = transaction.category?.name || 'Uncategorized';
-            if (!acc[categoryName]) {
-                acc[categoryName] = 0;
-            }
-            acc[categoryName] += transaction.carbonFootprint || 0;
-            return acc;
-        }, {});
-
-        const breakdownArray = Object.entries(tempBreakdown).map(([category, value]) => ({
-            category,
-            value: Number(value.toFixed(2)),
-        }));
-
-        setCategoryBreakdown(breakdownArray);
-    }, [filterTransactions, selectedPeriod]);
-
     useEffect(() => {
         fetchTransactions();
         fetchCategories();
@@ -149,8 +129,7 @@ const CarbonFootprint = () => {
         if (selectedPeriod === 'currentMonth') {
             calculateCumulativeData(transactions, 'lastMonth', setPreviousMonthData);
         }
-        calculateCategoryBreakdown(transactions);
-    }, [transactions, selectedCategory, selectedPeriod, customStartDate, customEndDate, calculateTotalCarbonFootprint, calculateCumulativeData, calculateCategoryBreakdown]);
+    }, [transactions, selectedCategory, selectedPeriod, customStartDate, customEndDate, calculateTotalCarbonFootprint, calculateCumulativeData]);
 
     const lineChartData = {
         labels: comparePreviousMonth ? Array.from({ length: 31 }, (_, i) => i + 1) : cumulativeData.map(data => data.date),
@@ -219,37 +198,36 @@ const CarbonFootprint = () => {
         },
     };
 
-    const barChartData = {
-        labels: categoryBreakdown.map(item => item.category),
-        datasets: [
-            {
-                label: 'Carbon Footprint by Category (kg CO2)',
-                data: categoryBreakdown.map(item => item.value),
-                backgroundColor: 'rgba(75,192,192,0.4)',
-                borderColor: 'rgba(75,192,192,1)',
-                borderWidth: 1,
-            },
-        ],
+    const calculateCarbonFootprintDistribution = (transactions) => {
+        const filteredTransactions = filterTransactions(transactions, selectedPeriod)
+            .filter(transaction => transaction.type !== 'Income');
+
+        const categoryTotals = filteredTransactions.reduce((acc, transaction) => {
+            const category = transaction.category?.name || 'Uncategorized';
+            acc[category] = (acc[category] || 0) + (transaction.carbonFootprint || 0);
+            return acc;
+        }, {});
+
+        const labels = Object.keys(categoryTotals);
+        const data = Object.values(categoryTotals);
+
+        return {
+            labels,
+            datasets: [{
+                data,
+                backgroundColor: labels.map((_, index) => `hsl(${index * 360 / labels.length}, 70%, 50%)`),
+            }],
+        };
     };
 
-    const barChartOptions = {
-        scales: {
-            x: {
-                title: {
-                    display: true,
-                    text: 'Category',
-                },
-            },
-        },
+    const carbonFootprintDistributionData = calculateCarbonFootprintDistribution(transactions);
+
+    const pieChartOptions = {
         plugins: {
-            tooltip: {
-                callbacks: {
-                    label: function(context) {
-                        return `${context.raw.toFixed(2)} kg CO2`;
-                    }
-                },
-            },
-        },
+            legend: {
+                display: false
+            }
+        }
     };
 
     return (
@@ -267,10 +245,21 @@ const CarbonFootprint = () => {
                 </div>
                 <Line data={lineChartData} options={lineChartOptions} />
             </div>
-            <div className="category-breakdown">
-                <h3>Carbon Footprint by Spending Category</h3>
-                <p>This bar chart shows the carbon emissions associated with each spending category for the current month.</p>
-                <Bar data={barChartData} options={barChartOptions} />
+            <div className="carbon-footprint-distribution-chart">
+                <h3>Your Carbon Footprint Distribution</h3>
+                <div className="chart-and-labels-container">
+                    <div className="chart-container">
+                        <Pie data={carbonFootprintDistributionData} options={pieChartOptions} />
+                    </div>
+                    <div className="category-labels">
+                        {carbonFootprintDistributionData.labels.map((label, index) => (
+                            <div key={index} className="category-label">
+                                <div className="category-color" style={{ backgroundColor: carbonFootprintDistributionData.datasets[0].backgroundColor[index] }}></div>
+                                {label}
+                            </div>
+                        ))}
+                    </div>
+                </div>
             </div>
             <div className="recommendations">
                 <h4>Carbon Footprint Recommendations</h4>

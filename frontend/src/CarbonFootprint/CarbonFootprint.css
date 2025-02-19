@@ -200,3 +200,49 @@ input:checked + .slider:before {
     font-size: 1rem;
     color: var(--text-color);
 }
+
+.carbon-footprint-distribution-chart {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 20px;
+    background-color: var(--light-gray);
+    border-radius: 8px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    transition: box-shadow 0.3s ease;
+    margin-top: 40px;
+}
+
+.chart-and-labels-container {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+}
+
+.chart-container {
+    width: 400px; /* Set the desired width */
+    height: 400px; /* Set the desired height */
+    position: relative; /* Ensure the chart is positioned correctly */
+}
+
+.category-labels {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-left: 20px;
+}
+
+.category-label {
+    font-size: 1rem;
+    color: var(--text-color);
+    display: flex;
+    align-items: center;
+}
+
+.category-color {
+    width: 20px;
+    height: 20px;
+    margin-right: 10px;
+    border-radius: 50%;
+}
