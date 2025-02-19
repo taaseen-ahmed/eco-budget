@@ -314,7 +314,7 @@ const Spending = () => {
     });
 
     const currentBalance = calculateBalance();
-    const balanceClass = currentBalance < 0 ? 'negative-balance' : 'positive-balance'; // Conditional class for balance
+    const balanceClass = currentBalance < 0 ? 'negative-balance' : 'positive-balance';
 
     const calculateTotalExpense = (transactions) => {
         return transactions
@@ -390,29 +390,50 @@ const Spending = () => {
                 <div className="transaction-list">
                     <h3>Your Transactions</h3>
                     {sortedTransactions.length === 0 ? (
-                        <p>No transactions found.</p>
+                        <p className="no-transactions">No transactions found.</p>
                     ) : (
                         <ul>
                             {sortedTransactions.map((transaction) => (
                                 <li key={transaction.id} className="transaction-item">
                                     <div className="transaction-detail">
-                                        <strong>Amount:</strong> {transaction.amount} <br/>
-                                        <strong>Category:</strong> {transaction.category.name} <br/>
-                                        <strong>Type:</strong> {transaction.type} <br/>
-                                        <strong>Date:</strong> {new Date(transaction.date).toLocaleDateString()} <br/>
-                                        <strong>Description:</strong> {transaction.description} <br/>
-                                        <strong>Carbon Footprint:</strong>{' '}
-                                        {transaction.carbonFootprint !== null && transaction.carbonFootprint !== undefined
-                                            ? `${transaction.carbonFootprint} kg CO2`
-                                            : 'Not Available'}
+                                        <div>
+                                            <span className="detail-label">Amount</span>
+                                            <span className={`amount-value ${transaction.type === 'expense' ? 'expense-amount' : 'income-amount'}`}>
+                                {transaction.amount}
+                            </span>
+                                        </div>
+                                        <div>
+                                            <span className="detail-label">Category</span>
+                                            <span className="category-badge">
+                                {transaction.category.name}
+                            </span>
+                                        </div>
+                                        <div>
+                                            <span className="detail-label">Date</span>
+                                            <span className="detail-value">
+                                {new Date(transaction.date).toLocaleDateString()}
+                            </span>
+                                        </div>
+                                        <div>
+                                            <span className="detail-label">Description</span>
+                                            <span className="detail-value">{transaction.description}</span>
+                                        </div>
+                                        {transaction.carbonFootprint !== null && (
+                                            <div>
+                                                <span className="detail-label">Carbon Footprint</span>
+                                                <span className="carbon-footprint">
+                                    {transaction.carbonFootprint} kg CO2
+                                </span>
+                                            </div>
+                                        )}
                                     </div>
                                     <div className="transaction-actions">
                                         <button onClick={() => handleEditTransaction(transaction)}
-                                                className="edit-button">
+                                                className="action-button edit-button">
                                             <FaEdit/> Edit
                                         </button>
                                         <button onClick={() => handleDeleteTransaction(transaction.id)}
-                                                className="delete-button">
+                                                className="action-button delete-button">
                                             <FaTrash/> Delete
                                         </button>
                                     </div>
