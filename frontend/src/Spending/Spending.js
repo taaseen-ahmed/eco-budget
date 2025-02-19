@@ -232,7 +232,7 @@ const Spending = () => {
 
     const calculateCumulativeData = useCallback((transactions) => {
         const filteredTransactions = filterTransactionsByPeriod(transactions, selectedPeriod, customStartDate, customEndDate)
-            .filter(transaction => transaction.type === "Expense" && (selectedCategory === 'All' || transaction.category.name === selectedCategory));
+            .filter(transaction => transaction.type === "Expense" && (filterCategory === '' || transaction.category.name === filterCategory));
         const sortedTransactions = [...filteredTransactions].sort((a, b) => new Date(a.date) - new Date(b.date));
         let cumulativeSum = 0;
         const cumulative = sortedTransactions.map(transaction => {
@@ -245,7 +245,7 @@ const Spending = () => {
         }));
         setCumulativeData(cumulative);
         setIndividualData(individual);
-    }, [selectedPeriod, selectedCategory, customStartDate, customEndDate]);
+    }, [selectedPeriod, filterCategory, customStartDate, customEndDate]);
 
     useEffect(() => {
         calculateCumulativeData(transactions);
@@ -286,7 +286,7 @@ const Spending = () => {
             transaction.type.toLowerCase().includes(searchQuery.toLowerCase()) ||
             new Date(transaction.date).toLocaleDateString().includes(searchQuery);
         const matchesFilterType = filterType ? transaction.type === filterType : true;
-        const matchesFilterCategory = selectedCategory === 'All' || transaction.category.name === selectedCategory;
+        const matchesFilterCategory = filterCategory === '' || transaction.category.name === filterCategory;
         const matchesCustomDate =
             (!customStartDate || new Date(transaction.date) >= new Date(customStartDate)) &&
             (!customEndDate || new Date(transaction.date) <= new Date(customEndDate));
