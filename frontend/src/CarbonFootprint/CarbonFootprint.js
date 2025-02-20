@@ -15,7 +15,9 @@ const CarbonFootprint = () => {
     const [previousMonthData, setPreviousMonthData] = useState([]);
     const [comparePreviousMonth, setComparePreviousMonth] = useState(false);
     const [recommendations, setRecommendations] = useState([]);
-    const [loading, setLoading] = useState(false);
+    const [benchmarks, setBenchmarks] = useState([]);
+    const [loadingRecommendations, setLoadingRecommendations] = useState(false);
+    const [loadingBenchmarks, setLoadingBenchmarks] = useState(false);
     const [selectedCategory, setSelectedCategory] = useState('');
     const [selectedPeriod, setSelectedPeriod] = useState('currentMonth');
     const [customStartDate, setCustomStartDate] = useState('');
@@ -49,7 +51,7 @@ const CarbonFootprint = () => {
     }, []);
 
     const fetchRecommendations = useCallback(async () => {
-        setLoading(true);
+        setLoadingRecommendations(true);
         try {
             const token = localStorage.getItem('jwtToken');
             const response = await axios.get('/api/recommendations/carbon-footprint', {
@@ -60,7 +62,23 @@ const CarbonFootprint = () => {
             console.error('Error fetching recommendations:', error);
             alert('Failed to fetch recommendations. Please try again.');
         } finally {
-            setLoading(false);
+            setLoadingRecommendations(false);
+        }
+    }, []);
+
+    const fetchBenchmarks = useCallback(async () => {
+        setLoadingBenchmarks(true);
+        try {
+            const token = localStorage.getItem('jwtToken');
+            const response = await axios.get('/api/benchmarks', {
+                headers: { Authorization: `Bearer ${token}` },
+            });
+            setBenchmarks(response.data.benchmarks);
+        } catch (error) {
+            console.error('Error fetching benchmarks:', error);
+            alert('Failed to fetch benchmarks. Please try again.');
+        } finally {
+            setLoadingBenchmarks(false);
         }
     }, []);
 
@@ -263,12 +281,23 @@ const CarbonFootprint = () => {
             </div>
             <div className="recommendations">
                 <h4>Carbon Footprint Recommendations</h4>
-                <button onClick={fetchRecommendations} className="add-transaction-button" disabled={loading}>
-                    {loading ? <div className="spinner"></div> : (recommendations.length === 0 ? 'Generate Recommendations' : 'Regenerate Recommendations')}
+                <button onClick={fetchRecommendations} className="add-transaction-button" disabled={loadingRecommendations}>
+                    {loadingRecommendations ? <div className="spinner"></div> : (recommendations.length === 0 ? 'Generate Recommendations' : 'Regenerate Recommendations')}
                 </button>
                 <ul>
                     {recommendations.map((recommendation, index) => (
                         <li key={index}>{recommendation}</li>
+                    ))}
+                </ul>
+            </div>
+            <div className="benchmarks">
+                <h4>Carbon Footprint Benchmarks</h4>
+                <button onClick={fetchBenchmarks} className="add-transaction-button" disabled={loadingBenchmarks}>
+                    {loadingBenchmarks ? <div className="spinner"></div> : (benchmarks.length === 0 ? 'Generate Benchmarks' : 'Regenerate Benchmarks')}
+                </button>
+                <ul>
+                    {benchmarks.map((benchmark, index) => (
+                        <li key={index}>{benchmark}</li>
                     ))}
                 </ul>
             </div>
