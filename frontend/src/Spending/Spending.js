@@ -27,13 +27,14 @@ const Spending = () => {
     const [selectedPeriod, setSelectedPeriod] = useState('currentMonth');
     const [selectedCategory] = useState('All'); // New state for selected category
     const [cumulativeData, setCumulativeData] = useState([]);
-    const [individualData, setIndividualData] = useState([]);
     const [recommendations, setRecommendations] = useState([]);
     const [loading, setLoading] = useState(false);
     const [isFilterPopupVisible, setFilterPopupVisible] = useState(false);
     const [customStartDate, setCustomStartDate] = useState('');
     const [customEndDate, setCustomEndDate] = useState('');
     const [sortOption, setSortOption] = useState('dateDesc');
+    const [comparePreviousMonth, setComparePreviousMonth] = useState(false);
+    const [previousMonthData, setPreviousMonthData] = useState([]);
 
     const resetNewTransaction = () => {
         setNewTransaction({
@@ -198,70 +199,134 @@ const Spending = () => {
         setNewTransaction({ ...newTransaction, [name]: value });
     };
 
-    const filterTransactionsByPeriod = (transactions, period, customStartDate, customEndDate) => {
+    const filterTransactionsByPeriod = useCallback((transactions, period, startDate, endDate) => {
         const now = new Date();
-        let startDate, endDate;
+        let startDateFilter, endDateFilter;
 
         switch (period) {
             case 'currentMonth':
-                startDate = new Date(now.getFullYear(), now.getMonth(), 1);
-                endDate = now;
+                startDateFilter = new Date(now.getFullYear(), now.getMonth(), 1);
+                endDateFilter = now;
                 break;
             case 'lastMonth':
-                startDate = new Date(now.getFullYear(), now.getMonth() - 1, 1);
-                endDate = new Date(now.getFullYear(), now.getMonth(), 0);
+                startDateFilter = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+                endDateFilter = new Date(now.getFullYear(), now.getMonth(), 0);
                 break;
             case 'last3Months':
-                startDate = new Date(now.getFullYear(), now.getMonth() - 3, 1);
-                endDate = now;
+                startDateFilter = new Date(now.getFullYear(), now.getMonth() - 3, 1);
+                endDateFilter = now;
                 break;
             case 'custom':
-                startDate = new Date(customStartDate);
-                endDate = new Date(customEndDate);
+                startDateFilter = new Date(startDate);
+                endDateFilter = new Date(endDate);
                 break;
             default:
-                startDate = new Date(now.getFullYear(), now.getMonth(), 1);
-                endDate = now;
+                startDateFilter = new Date(now.getFullYear(), now.getMonth(), 1);
+                endDateFilter = now;
         }
 
         return transactions.filter(transaction => {
             const transactionDate = new Date(transaction.date);
-            return transactionDate >= startDate && transactionDate <= endDate;
+            return transactionDate >= startDateFilter && transactionDate <= endDateFilter;
         });
-    };
+    }, []);
 
-    const calculateCumulativeData = useCallback((transactions) => {
-        const filteredTransactions = filterTransactionsByPeriod(transactions, selectedPeriod, customStartDate, customEndDate)
-            .filter(transaction => transaction.type === "Expense" && (filterCategory === '' || transaction.category.name === filterCategory));
-        const sortedTransactions = [...filteredTransactions].sort((a, b) => new Date(a.date) - new Date(b.date));
-        let cumulativeSum = 0;
-        const cumulative = sortedTransactions.map(transaction => {
-            cumulativeSum += parseFloat(transaction.amount) || 0;
-            return { date: transaction.date, cumulativeSum };
-        });
-        const individual = sortedTransactions.map(transaction => ({
-            date: transaction.date,
-            amount: parseFloat(transaction.amount) || 0,
-        }));
-        setCumulativeData(cumulative);
-        setIndividualData(individual);
-    }, [selectedPeriod, filterCategory, customStartDate, customEndDate]);
+    const calculateCumulativeData = useCallback((transactions, period, customStartDate, customEndDate) => {
+        if (period === 'currentMonth' && comparePreviousMonth) {
+            // Calculate current month data
+            const currentMonthTransactions = filterTransactionsByPeriod(
+                transactions.filter(t => t.type === "Expense"),
+                'currentMonth'
+            );
+
+            // Calculate previous month data
+            const previousMonthTransactions = filterTransactionsByPeriod(
+                transactions.filter(t => t.type === "Expense"),
+                'lastMonth'
+            );
+
+            // Process current month data
+            let currentCumulativeSum = 0;
+            const currentData = currentMonthTransactions
+                .sort((a, b) => new Date(a.date) - new Date(b.date))
+                .map(transaction => {
+                    const amount = parseFloat(transaction.amount) || 0;
+                    currentCumulativeSum += amount;
+                    return {
+                        day: new Date(transaction.date).getDate(),
+                        cumulativeSum: currentCumulativeSum,
+                        amount
+                    };
+                });
+
+            // Process previous month data
+            let prevCumulativeSum = 0;
+            const prevData = previousMonthTransactions
+                .sort((a, b) => new Date(a.date) - new Date(b.date))
+                .map(transaction => {
+                    const amount = parseFloat(transaction.amount) || 0;
+                    prevCumulativeSum += amount;
+                    return {
+                        day: new Date(transaction.date).getDate(),
+                        cumulativeSum: prevCumulativeSum,
+                        amount
+                    };
+                });
+
+            setCumulativeData(currentData);
+            setPreviousMonthData(prevData);
+        } else {
+            // Original cumulative data calculation for other periods
+            const filteredTransactions = filterTransactionsByPeriod(transactions, period, customStartDate, customEndDate)
+                .filter(transaction =>
+                    transaction.type === "Expense" &&
+                    (filterCategory === '' || transaction.category.name === filterCategory)
+                );
+
+            let cumulativeSum = 0;
+            const cumulative = filteredTransactions
+                .sort((a, b) => new Date(a.date) - new Date(b.date))
+                .map(transaction => {
+                    const amount = parseFloat(transaction.amount) || 0;
+                    cumulativeSum += amount;
+                    return {
+                        date: transaction.date,
+                        cumulativeSum,
+                        amount
+                    };
+                });
+
+            setCumulativeData(cumulative);
+            setPreviousMonthData([]);
+        }
+    }, [filterTransactionsByPeriod, filterCategory, comparePreviousMonth]);
 
     useEffect(() => {
-        calculateCumulativeData(transactions);
-    }, [transactions, selectedPeriod, selectedCategory, customStartDate, customEndDate, calculateCumulativeData]);
+        calculateCumulativeData(transactions, selectedPeriod, customStartDate, customEndDate);
+    }, [transactions, selectedPeriod, selectedCategory, customStartDate, customEndDate, comparePreviousMonth, calculateCumulativeData]);
 
     const chartData = {
-        labels: cumulativeData.map(data => new Date(data.date).toLocaleDateString()),
+        labels: comparePreviousMonth
+            ? Array.from({ length: 31 }, (_, i) => i + 1)
+            : cumulativeData.map(data => new Date(data.date).toLocaleDateString()),
         datasets: [
             {
-                label: 'Cumulative Spending (£)',
-                data: cumulativeData.map(data => data.cumulativeSum),
+                label: comparePreviousMonth ? 'Current Month Spending' : 'Cumulative Spending (£)',
+                data: comparePreviousMonth
+                    ? cumulativeData.map(data => ({ x: data.day, y: data.cumulativeSum, amount: data.amount }))
+                    : cumulativeData.map(data => data.cumulativeSum),
                 fill: false,
                 backgroundColor: 'rgba(75,192,192,0.4)',
                 borderColor: 'rgba(75,192,192,1)',
             },
-        ],
+            comparePreviousMonth && {
+                label: 'Previous Month Spending',
+                data: previousMonthData.map(data => ({ x: data.day, y: data.cumulativeSum, amount: data.amount })),
+                fill: false,
+                backgroundColor: 'rgba(255,99,132,0.4)',
+                borderColor: 'rgba(255,99,132,1)',
+            }
+        ].filter(Boolean),
     };
 
     const chartOptions = {
@@ -269,13 +334,36 @@ const Spending = () => {
             tooltip: {
                 callbacks: {
                     label: function(context) {
-                        const index = context.dataIndex;
-                        const individualAmount = individualData[index]?.amount || 0;
-                        return `£${individualAmount}`;
+                        if (comparePreviousMonth) {
+                            const amount = (context.raw.amount || 0).toFixed(2);
+                            const cumulative = (context.raw.y || 0).toFixed(2);
+                            return `Daily: £${amount}\nCumulative: £${cumulative}`;
+                        }
+                        return `£${context.raw.amount || 0}`;
                     }
                 }
             }
-        }
+        },
+        scales: {
+            x: comparePreviousMonth ? {
+                type: 'linear',
+                title: {
+                    display: true,
+                    text: 'Day of the Month',
+                },
+                ticks: {
+                    stepSize: 1,
+                },
+            } : {
+                type: 'category',
+            },
+            y: {
+                title: {
+                    display: true,
+                    text: 'Cumulative Spending (£)',
+                },
+            },
+        },
     };
 
     const filteredTransactions = transactions.filter((transaction) => {
@@ -449,6 +537,20 @@ const Spending = () => {
                     <div className={`balance ${balanceClass}`}>
                         <h3>Your Current Balance: £{currentBalance}</h3>
                     </div>
+
+                    {selectedPeriod === 'currentMonth' && (
+                        <div className="toggle-container">
+                            <label className="switch">
+                                <input
+                                    type="checkbox"
+                                    checked={comparePreviousMonth}
+                                    onChange={() => setComparePreviousMonth(!comparePreviousMonth)}
+                                />
+                                <span className="slider round"></span>
+                            </label>
+                            <span className="toggle-label">Compare with Previous Month</span>
+                        </div>
+                    )}
 
                     <div className="spending-chart">
                         <h3 className="chart-title">Cumulative Spending Over Time</h3>
