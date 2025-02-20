@@ -44,7 +44,7 @@ public class RecommendationService {
 
         Recommendation recommendation = recommendationRepository.findByAppUserEmail(email).orElse(null);
 
-        boolean shouldRefreshRecommendations = recommendation == null || appUser.isTransactionsUpdated();
+        boolean shouldRefreshRecommendations = recommendation == null || appUser.isTransactionsUpdatedForRecommendations();
 
         if (!shouldRefreshRecommendations) {
             System.out.println("Using existing recommendations for user: " + email);
@@ -59,7 +59,6 @@ public class RecommendationService {
         String spendingRecommendation = chatGPTService.getRecommendation(spendingPrompt);
         String carbonFootprintRecommendation = chatGPTService.getRecommendation(carbonFootprintPrompt);
 
-
         if (recommendation == null) {
             recommendation = new Recommendation(appUser);
         } else {
@@ -71,8 +70,7 @@ public class RecommendationService {
         recommendation.setCarbonFootprintRecommendations(parseRecommendations(carbonFootprintRecommendation));
         recommendation.setLastUpdated(LocalDateTime.now());
 
-        // Reset the transactionsUpdated flag
-        appUser.setTransactionsUpdated(false);
+        appUser.setTransactionsUpdatedForRecommendations(false);
         appUserRepository.save(appUser);
 
         return recommendationRepository.save(recommendation);
@@ -156,7 +154,7 @@ public class RecommendationService {
         }
 
         prompt.append("]");
-        prompt.append("\nPlease provide actionable tips based on the carbon footprint patterns.");
+        prompt.append("\nPlease provide actionable tips based on the carbon footprint patterns. Give a response in the context of the UK and Europe.");
         return prompt.toString();
     }
 }

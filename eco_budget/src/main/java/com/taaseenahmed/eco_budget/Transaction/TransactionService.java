@@ -78,7 +78,8 @@ public class TransactionService {
 
         // Check if the transaction date is within the last 30 days
         if (transaction.getDate().isAfter(LocalDateTime.now().minusDays(30))) {
-            user.setTransactionsUpdated(true);
+            user.setTransactionsUpdatedForRecommendations(true);
+            user.setTransactionsUpdatedForBenchmarks(true);
             appUserRepository.save(user);
         }
 
@@ -168,7 +169,8 @@ public class TransactionService {
         // Check if the transaction date is within the last 30 days
         if (existingTransaction.getDate().isAfter(LocalDateTime.now().minusDays(30))) {
             AppUser user = existingTransaction.getAppUser();
-            user.setTransactionsUpdated(true);
+            user.setTransactionsUpdatedForRecommendations(true);
+            user.setTransactionsUpdatedForBenchmarks(true);
             appUserRepository.save(user);
         }
 
@@ -183,7 +185,8 @@ public class TransactionService {
         // Check if the transaction date is within the last 30 days
         if (existingTransaction.getDate().isAfter(LocalDateTime.now().minusDays(30))) {
             AppUser user = existingTransaction.getAppUser();
-            user.setTransactionsUpdated(true);
+            user.setTransactionsUpdatedForRecommendations(true);
+            user.setTransactionsUpdatedForBenchmarks(true);
             appUserRepository.save(user);
         }
 

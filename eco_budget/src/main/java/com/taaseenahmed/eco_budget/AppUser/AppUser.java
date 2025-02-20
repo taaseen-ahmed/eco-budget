@@ -33,7 +33,10 @@ public class AppUser implements UserDetails {
     private Role role;
 
     @Column(nullable = false)
-    private boolean transactionsUpdated;
+    private boolean transactionsUpdatedForRecommendations;
+
+    @Column(nullable = false)
+    private boolean transactionsUpdatedForBenchmarks;
 
     // Returns the authorities granted to the user, based on their role.
     @Override
