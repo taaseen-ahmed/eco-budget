@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Routes, Route, BrowserRouter as Router, Link, useNavigate } from 'react-router-dom';
 import { Navbar, Nav, Container, Button, Spinner } from 'react-bootstrap';
+import { motion, AnimatePresence } from 'framer-motion';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import Home from './Home/Home';
 import Registration from './Registration/Registration';
@@ -27,7 +28,13 @@ function App() {
     if (loading) {
         return (
             <div className="loading-container">
-                <Spinner animation="border" variant="success" />
+                <motion.div
+                    initial={{ opacity: 0, scale: 0.8 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ duration: 0.5 }}
+                >
+                    <Spinner animation="border" variant="primary" />
+                </motion.div>
             </div>
         );
     }
@@ -37,7 +44,9 @@ function App() {
             <div className="app-container">
                 <AppContent isAuthenticated={isAuthenticated} setIsAuthenticated={setIsAuthenticated} />
                 <footer className="footer">
-                    <p>&copy; Final Year Project 2025 Eco-Budget App. All rights reserved.</p>
+                    <Container>
+                        <p>&copy; Final Year Project 2025 Eco-Budget App. All rights reserved.</p>
+                    </Container>
                 </footer>
             </div>
         </Router>
@@ -55,40 +64,59 @@ function AppContent({ isAuthenticated, setIsAuthenticated }) {
 
     return (
         <>
-            <Navbar expand="lg" className="custom-navbar">
+            <Navbar expand="lg" className="custom-navbar" fixed="top">
                 <Container>
-                    <Navbar.Brand as={Link} to={isAuthenticated ? '/dashboard' : '/'} className="brand">
-                        🌱 Eco-Budget
-                    </Navbar.Brand>
+                    <motion.div
+                        whileHover={{ scale: 1.05 }}
+                        transition={{ duration: 0.2 }}
+                    >
+                        <Navbar.Brand as={Link} to={isAuthenticated ? '/dashboard' : '/'} className="brand">
+                            <span className="brand-icon">🌱</span> Eco-Budget
+                        </Navbar.Brand>
+                    </motion.div>
                     <Navbar.Toggle aria-controls="basic-navbar-nav" />
                     <Navbar.Collapse id="basic-navbar-nav">
                         <Nav className="ms-auto">
                             {isAuthenticated ? (
                                 <>
-                                    <Nav.Link as={Link} to="/dashboard">
+                                    <Nav.Link as={Link} to="/dashboard" className="nav-item">
                                         Dashboard
                                     </Nav.Link>
-                                    <Nav.Link as={Link} to="/spending">
+                                    <Nav.Link as={Link} to="/spending" className="nav-item">
                                         Spending
                                     </Nav.Link>
-                                    <Nav.Link as={Link} to="/budget">
+                                    <Nav.Link as={Link} to="/budget" className="nav-item">
                                         Budget
                                     </Nav.Link>
-                                    <Nav.Link as={Link} to="/carbon-footprint">
+                                    <Nav.Link as={Link} to="/carbon-footprint" className="nav-item">
                                         Carbon Footprint
                                     </Nav.Link>
-                                    <Button variant="outline-danger" size="sm" onClick={handleLogout} className="ms-3" >
-                                        Log Out
-                                    </Button>
+                                    <motion.div
+                                        whileHover={{ scale: 1.05 }}
+                                        whileTap={{ scale: 0.95 }}
+                                    >
+                                        <Button
+                                            variant="light"
+                                            onClick={handleLogout}
+                                            className="logout-button ms-3"
+                                        >
+                                            Log Out
+                                        </Button>
+                                    </motion.div>
                                 </>
                             ) : (
                                 <>
-                                    <Nav.Link as={Link} to="/login">
+                                    <Nav.Link as={Link} to="/login" className="nav-item">
                                         Login
                                     </Nav.Link>
-                                    <Nav.Link as={Link} to="/register">
-                                        Register
-                                    </Nav.Link>
+                                    <motion.div
+                                        whileHover={{ scale: 1.05 }}
+                                        whileTap={{ scale: 0.95 }}
+                                    >
+                                        <Nav.Link as={Link} to="/register" className="btn btn-light nav-button">
+                                            Register
+                                        </Nav.Link>
+                                    </motion.div>
                                 </>
                             )}
                         </Nav>
@@ -97,30 +125,94 @@ function AppContent({ isAuthenticated, setIsAuthenticated }) {
             </Navbar>
 
             <Container className="content-container">
-                <Routes>
-                    <Route path="/" element={<Home />} />
-                    <Route path="/register" element={<Registration />} />
-                    <Route path="/login" element={<Login setIsAuthenticated={setIsAuthenticated} />} />
-                    <Route
-                        path="/dashboard"
-                        element={<PrivateRoute element={<Dashboard />} isAuthenticated={isAuthenticated} />}
-                    />
-                    <Route
-                        path="/spending"
-                        element={<PrivateRoute element={<Spending />} isAuthenticated={isAuthenticated} />}
-                    />
-                    <Route
-                        path="/budget"
-                        element={<PrivateRoute element={<Budget />} isAuthenticated={isAuthenticated} />}
-                    />
-                    <Route
-                        path="/carbon-footprint"
-                        element={<PrivateRoute element={<CarbonFootprint />} isAuthenticated={isAuthenticated} />}
-                    />
-                </Routes>
+                <AnimatePresence mode="wait">
+                    <Routes>
+                        <Route path="/" element={
+                            <PageTransition>
+                                <Home />
+                            </PageTransition>
+                        } />
+                        <Route path="/register" element={
+                            <PageTransition>
+                                <Registration />
+                            </PageTransition>
+                        } />
+                        <Route path="/login" element={
+                            <PageTransition>
+                                <Login setIsAuthenticated={setIsAuthenticated} />
+                            </PageTransition>
+                        } />
+                        <Route
+                            path="/dashboard"
+                            element={
+                                <PrivateRoute
+                                    element={
+                                        <PageTransition>
+                                            <Dashboard />
+                                        </PageTransition>
+                                    }
+                                    isAuthenticated={isAuthenticated}
+                                />
+                            }
+                        />
+                        <Route
+                            path="/spending"
+                            element={
+                                <PrivateRoute
+                                    element={
+                                        <PageTransition>
+                                            <Spending />
+                                        </PageTransition>
+                                    }
+                                    isAuthenticated={isAuthenticated}
+                                />
+                            }
+                        />
+                        <Route
+                            path="/budget"
+                            element={
+                                <PrivateRoute
+                                    element={
+                                        <PageTransition>
+                                            <Budget />
+                                        </PageTransition>
+                                    }
+                                    isAuthenticated={isAuthenticated}
+                                />
+                            }
+                        />
+                        <Route
+                            path="/carbon-footprint"
+                            element={
+                                <PrivateRoute
+                                    element={
+                                        <PageTransition>
+                                            <CarbonFootprint />
+                                        </PageTransition>
+                                    }
+                                    isAuthenticated={isAuthenticated}
+                                />
+                            }
+                        />
+                    </Routes>
+                </AnimatePresence>
             </Container>
         </>
     );
 }
+
+// Page transition component
+const PageTransition = ({ children }) => {
+    return (
+        <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            transition={{ duration: 0.3 }}
+        >
+            {children}
+        </motion.div>
+    );
+};
 
 export default App;

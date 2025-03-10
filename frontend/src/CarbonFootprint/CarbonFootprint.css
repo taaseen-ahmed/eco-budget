@@ -1,272 +1,392 @@
+/* Carbon Footprint specific styles */
 .carbon-footprint-container {
-    max-width: 1100px;
-    margin: 20px auto;
-    padding: 40px;
-    background-color: var(--light-gray);
-    border-radius: 12px;
-    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
-    font-family: Arial, sans-serif;
+    padding: 1rem 0;
 }
 
-.header {
-    text-align: center;
-    margin-bottom: 40px;
+.section-header {
+    margin-bottom: 2rem;
 }
 
-.header h2 {
-    color: var(--text-color);
-    font-size: 2rem;
+.section-subtitle {
+    color: #666;
+    max-width: 800px;
+    margin-left: auto;
+    margin-right: auto;
+    margin-bottom: 1.5rem;
 }
 
-.header p {
+/* Line Chart Card */
+.carbon-footprint-chart {
+    height: 100%;
+}
+
+.chart-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 1.5rem;
+}
+
+.chart-title {
+    font-size: 1.3rem;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
     color: var(--secondary-color);
+}
+
+.chart-description {
+    font-size: 0.9rem;
+    color: #666;
+    margin-bottom: 0;
 }
 
 .total-carbon-footprint {
-    text-align: center;
-    margin-top: 20px;
-    margin-bottom: 20px;
-    padding: 20px;
-    background-color: var(--light-gray);
-    border-radius: 8px;
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-    font-size: 1.5rem;
-    color: var(--text-color);
-}
-
-.carbon-footprint-chart {
-    margin-top: 40px;
-}
-
-.carbon-footprint-chart h3,
-.category-breakdown h3 {
-    text-align: center;
-    font-size: 1.8rem;
-    margin-bottom: 10px;
-    color: var(--text-color);
-}
-
-.carbon-footprint-chart p,
-.category-breakdown p {
-    text-align: center;
-    margin-bottom: 20px;
-    color: var(--secondary-color);
-    font-size: 1rem;
-}
-
-.category-breakdown {
-    margin-top: 40px;
-}
-
-.toggle-container {
-    text-align: center;
-    margin: 20px 0;
-}
-
-.toggle-container label {
-    font-size: 1rem;
-    color: var(--text-color);
-}
-
-.recommendations{
-    margin-top: 20px;
-    padding: 20px;
-    background-color: #e0f7fa;
-    border-left: 5px solid #00796b;
-    border-radius: 8px;
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-}
-
-.recommendations h4 {
-    margin-top: 0;
-    color: #00796b;
-}
-
-.recommendations ul {
-    list-style-type: none;
-    padding: 0;
-}
-
-.recommendations li {
-    margin-bottom: 10px;
-    color: #004d40;
-}
-
-.benchmarks{
-    margin-top: 20px;
-    padding: 20px;
-    background-color: #e0f7fa;
-    border-left: 5px solid #00796b;
-    border-radius: 8px;
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-}
-
-.benchmarks h4 {
-    margin-top: 0;
-    color: #00796b;
-}
-
-.benchmarks ul {
-    list-style-type: none;
-    padding: 0;
-}
-
-.benchmarks li {
-    margin-bottom: 10px;
-    color: #004d40;
-}
-
-.add-transaction-button {
-    background-color: var(--primary-color);
-    color: white;
-    border: none;
-    padding: 10px 20px;
-    border-radius: 5px;
-    cursor: pointer;
-}
-
-.add-transaction-button:disabled {
-    background-color: var(--accent-color);
-    cursor: not-allowed;
-}
-
-.spinner {
-    border: 4px solid rgba(0, 0, 0, 0.1);
-    border-left-color: var(--primary-color);
-    border-radius: 50%;
-    width: 20px;
-    height: 20px;
-    animation: spin 1s linear infinite;
-}
-
-@keyframes spin {
-    0% {
-        transform: rotate(0deg);
-    }
-    100% {
-        transform: rotate(360deg);
-    }
-}
-
-.filter-button {
-    display: block;
-    margin: 0 auto 20px;
-    padding: 10px 20px;
-    background-color: var(--primary-color);
-    color: white;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-    font-size: 1rem;
-    transition: background-color 0.3s ease;
-}
-
-.filter-button:hover {
-    background-color: var(--accent-color);
-}
-
-/* CarbonFootprint.css */
-
-.toggle-container {
     display: flex;
     align-items: center;
-    justify-content: center;
-    margin: 20px 0;
+    padding: 1.25rem;
+    background-color: rgba(178, 223, 219, 0.15);
+    border-radius: var(--border-radius);
+    margin-bottom: 1.5rem;
 }
 
-.switch {
+.carbon-icon {
+    font-size: 2.2rem;
+    color: var(--primary-color);
+    margin-right: 1.5rem;
+}
+
+.carbon-stats {
+    display: flex;
+    flex-direction: column;
+}
+
+.carbon-label {
+    font-size: 0.9rem;
+    color: #666;
+    margin-bottom: 0.25rem;
+}
+
+.carbon-value {
+    font-size: 1.8rem;
+    font-weight: 700;
+    color: var(--secondary-color);
+}
+
+.line-chart-container {
+    position: relative;
+    height: 350px;
+    width: 100%;
+}
+
+.line-chart-container canvas {
+    width: 100% !important;
+    max-width: none !important;
+}
+
+/* Distribution Chart */
+.distribution-chart {
+    height: 100%;
+}
+
+.pie-chart-container {
+    position: relative;
+    height: 250px;
+    margin-bottom: 1.5rem;
+}
+
+.category-legend {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    gap: 0.75rem;
+}
+
+.legend-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.85rem;
+}
+
+.color-indicator {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+
+.legend-label {
+    flex: 1;
+}
+
+.legend-value {
+    font-weight: 600;
+    color: var(--secondary-color);
+}
+
+/* Recommendations & Benchmarks */
+.carbon-recommendations, .carbon-benchmarks {
+    height: 100%;
+}
+
+.recommendations-header, .benchmarks-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.25rem;
+}
+
+.recommendations-list, .benchmarks-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.recommendation-item, .benchmark-item {
+    display: flex;
+    align-items: flex-start;
+    padding: 0.75rem;
+    margin-bottom: 0.5rem;
+    background-color: rgba(178, 223, 219, 0.1);
+    border-radius: var(--border-radius);
+    transition: all var(--transition-speed) ease;
+}
+
+.form-control:focus {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(75, 127, 126, 0.2);
+    outline: none;
+}
+
+.comparison-toggle {
+    display: flex;
+    align-items: center;
+    margin-top: 0.5rem;
+}
+
+.toggle-switch {
     position: relative;
     display: inline-block;
-    width: 60px;
-    height: 34px;
-    margin-right: 10px;
+    width: 50px;
+    height: 24px;
+    margin-right: 0.75rem;
 }
 
-.switch input {
+.toggle-switch input {
     opacity: 0;
     width: 0;
     height: 0;
 }
 
-.slider {
+.toggle-slider {
     position: absolute;
     cursor: pointer;
     top: 0;
     left: 0;
     right: 0;
     bottom: 0;
-    background-color: #ccc;
-    transition: 0.4s;
+    background-color: #E0E0E0;
+    transition: all var(--transition-speed) ease;
     border-radius: 34px;
 }
 
-.slider:before {
+.toggle-slider:before {
     position: absolute;
     content: "";
-    height: 26px;
-    width: 26px;
-    left: 4px;
-    bottom: 4px;
+    height: 18px;
+    width: 18px;
+    left: 3px;
+    bottom: 3px;
     background-color: white;
-    transition: 0.4s;
+    transition: all var(--transition-speed) ease;
     border-radius: 50%;
 }
 
-input:checked + .slider {
+input:checked + .toggle-slider {
     background-color: var(--primary-color);
 }
 
-input:checked + .slider:before {
+input:checked + .toggle-slider:before {
     transform: translateX(26px);
 }
 
 .toggle-label {
-    font-size: 1rem;
-    color: var(--text-color);
+    font-size: 0.9rem;
+    color: #666;
 }
 
-.carbon-footprint-distribution-chart {
+.popup-actions {
     display: flex;
-    flex-direction: column;
+    gap: 1rem;
+    margin-top: 1.5rem;
+}
+
+.popup-actions button {
+    flex: 1;
+}
+
+/* Media queries */
+@media (max-width: 992px) {
+    .carbon-footprint-chart,
+    .distribution-chart,
+    .carbon-recommendations,
+    .carbon-benchmarks {
+        margin-bottom: 1.5rem;
+    }
+
+    .line-chart-container,
+    .pie-chart-container {
+        height: 300px;
+    }
+
+    .chart-header {
+        flex-direction: column;
+    }
+
+    .chart-header button {
+        margin-top: 1rem;
+        align-self: flex-start;
+    }
+}
+
+@media (max-width: 768px) {
+    .total-carbon-footprint {
+        flex-direction: column;
+        text-align: center;
+    }
+
+    .carbon-icon {
+        margin-right: 0;
+        margin-bottom: 0.75rem;
+    }
+
+    .recommendations-header,
+    .benchmarks-header {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .recommendations-header button,
+    .benchmarks-header button {
+        margin-top: 0.75rem;
+    }
+
+    .popup-actions {
+        flex-direction: column;
+    }
+}
+
+.recommendation-item:hover, .benchmark-item:hover {
+    background-color: rgba(178, 223, 219, 0.2);
+}
+
+.recommendation-icon, .benchmark-icon {
+    margin-right: 0.75rem;
+    font-size: 1.1rem;
+    flex-shrink: 0;
+}
+
+.recommendation-text, .benchmark-text {
+    flex: 1;
+    font-size: 0.95rem;
+    line-height: 1.5;
+}
+
+.empty-recommendations, .empty-benchmarks {
+    text-align: center;
+    padding: 2rem 1rem;
+    color: #777;
+}
+
+.spinner-container {
+    display: inline-flex;
     align-items: center;
-    padding: 20px;
-    background-color: var(--light-gray);
-    border-radius: 8px;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-    transition: box-shadow 0.3s ease;
-    margin-top: 40px;
+    justify-content: center;
 }
 
-.chart-and-labels-container {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    width: 100%;
-}
-
-.chart-container {
-    width: 400px; /* Set the desired width */
-    height: 400px; /* Set the desired height */
-    position: relative; /* Ensure the chart is positioned correctly */
-}
-
-.category-labels {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-    margin-left: 20px;
-}
-
-.category-label {
-    font-size: 1rem;
-    color: var(--text-color);
-    display: flex;
-    align-items: center;
-}
-
-.category-color {
-    width: 20px;
-    height: 20px;
-    margin-right: 10px;
+.spinner {
+    width: 18px;
+    height: 18px;
+    border: 2px solid rgba(255, 255, 255, 0.3);
     border-radius: 50%;
+    border-top-color: white;
+    animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* Popup styles */
+.popup-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1050;
+    animation: fadeIn 0.3s ease-out;
+}
+
+.popup-container {
+    width: 100%;
+    max-width: 500px;
+    max-height: 90vh;
+    overflow-y: auto;
+    border-radius: var(--border-radius);
+    animation: slideUp 0.4s ease-out;
+}
+
+.filter-popup {
+    max-width: 500px;
+}
+
+.popup-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1.25rem 1.5rem;
+    border-bottom: 1px solid #EEE;
+}
+
+.popup-header h3 {
+    font-size: 1.4rem;
+    font-weight: 600;
+    margin: 0;
+    color: var(--secondary-color);
+}
+
+.close-button {
+    background: none;
+    border: none;
+    font-size: 1.75rem;
+    line-height: 1;
+    color: #777;
+    cursor: pointer;
+    transition: all var(--transition-speed) ease;
+}
+
+.close-button:hover {
+    color: #333;
+}
+
+.popup-body {
+    padding: 1.5rem;
+}
+
+.form-group {
+    margin-bottom: 1.25rem;
+}
+
+.form-control {
+    width: 100%;
+    padding: 0.75rem 1rem;
+    border: 2px solid #E0E0E0;
+    border-radius: var(--border-radius);
+    background-color: var(--light-background);
+    transition: all var(--transition-speed) ease;
 }

@@ -1,9 +1,10 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { FaEdit, FaTrash } from 'react-icons/fa';
+import { FaFilter, FaEdit, FaTrash } from 'react-icons/fa';
 import axios from 'axios';
 import { Line, Pie } from 'react-chartjs-2';
 import { Chart as ChartJS, CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend, ArcElement } from 'chart.js';
 import './Spending.css';
+import { Row, Col } from 'react-bootstrap';
 
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend, ArcElement);
 
@@ -452,332 +453,538 @@ const Spending = () => {
 
     return (
         <div className="spending-container">
-            <div className="left-container">
-                <div className="header">
-                    <h2>Your Spending</h2>
-                    <p>Track your income, expenses, and more with ease.</p>
-                </div>
+            <Row className="g-4">
+                <Col lg={5}>
+                    <div className="left-section eco-card">
+                        <div className="section-header">
+                            <h2 className="page-title">Your Spending</h2>
+                            <p className="section-subtitle">Track your income, expenses, and more with ease.</p>
+                        </div>
 
-                <button onClick={handleAddTransactionClick} className="add-transaction-button">
-                    Add Transaction
-                </button>
+                        <div className="action-buttons">
+                            <button onClick={handleAddTransactionClick} className="btn-eco-primary">
+                                <span className="btn-icon">+</span> Add Transaction
+                            </button>
+                        </div>
 
-                <div className="filters">
-                    <input
-                        type="text"
-                        placeholder="Search transactions..."
-                        value={searchQuery}
-                        onChange={(e) => setSearchQuery(e.target.value)}
-                        className="search-bar"
-                    />
-                    <button onClick={handleFilterButtonClick} className="add-transaction-button">
-                        Filter & Sort Transactions
-                    </button>
-                </div>
-
-                <div className="transaction-list">
-                    <h3>Your Transactions</h3>
-                    {sortedTransactions.length === 0 ? (
-                        <p className="no-transactions">No transactions found.</p>
-                    ) : (
-                        <ul>
-                            {sortedTransactions.map((transaction) => (
-                                <li key={transaction.id} className="transaction-item">
-                                    <div className="transaction-detail">
-                                        <div>
-                                            <span className="detail-label">Amount</span>
-                                            <span className={`amount-value ${transaction.type === 'expense' ? 'expense-amount' : 'income-amount'}`}>
-                                {transaction.amount}
-                            </span>
-                                        </div>
-                                        <div>
-                                            <span className="detail-label">Category</span>
-                                            <span className="category-badge">
-                                {transaction.category.name}
-                            </span>
-                                        </div>
-                                        <div>
-                                            <span className="detail-label">Date</span>
-                                            <span className="detail-value">
-                                {new Date(transaction.date).toLocaleDateString()}
-                            </span>
-                                        </div>
-                                        <div>
-                                            <span className="detail-label">Description</span>
-                                            <span className="detail-value">{transaction.description}</span>
-                                        </div>
-                                        {transaction.carbonFootprint !== null && (
-                                            <div>
-                                                <span className="detail-label">Carbon Footprint</span>
-                                                <span className="carbon-footprint">
-                                    {transaction.carbonFootprint} kg CO2
-                                </span>
-                                            </div>
-                                        )}
-                                    </div>
-                                    <div className="transaction-actions">
-                                        <button onClick={() => handleEditTransaction(transaction)}
-                                                className="action-button edit-button">
-                                            <FaEdit/> Edit
-                                        </button>
-                                        <button onClick={() => handleDeleteTransaction(transaction.id)}
-                                                className="action-button delete-button">
-                                            <FaTrash/> Delete
-                                        </button>
-                                    </div>
-                                </li>
-                            ))}
-                        </ul>
-                    )}
-                </div>
-            </div>
-
-            <div className="right-container">
-                <div className="balance-and-chart">
-                    <div className={`balance ${balanceClass}`}>
-                        <h3>Your Current Balance: £{currentBalance}</h3>
-                    </div>
-
-                    {selectedPeriod === 'currentMonth' && (
-                        <div className="toggle-container">
-                            <label className="switch">
+                        <div className="filters-container">
+                            <div className="search-wrapper">
                                 <input
-                                    type="checkbox"
-                                    checked={comparePreviousMonth}
-                                    onChange={() => setComparePreviousMonth(!comparePreviousMonth)}
+                                    type="text"
+                                    placeholder="Search transactions..."
+                                    value={searchQuery}
+                                    onChange={(e) => setSearchQuery(e.target.value)}
+                                    className="search-input"
                                 />
-                                <span className="slider round"></span>
-                            </label>
-                            <span className="toggle-label">Compare with Previous Month</span>
+                            </div>
+                            <button onClick={handleFilterButtonClick} className="btn-eco-secondary">
+                                <FaFilter className="me-2" /> Filter & Sort
+                            </button>
                         </div>
-                    )}
 
-                    <div className="spending-chart">
-                        <h3 className="chart-title">Cumulative Spending Over Time</h3>
-                        <Line data={chartData} options={chartOptions} />
-                    </div>
+                        <div className="transaction-list-container">
+                            <h3 className="list-title">Your Transactions</h3>
+                            {sortedTransactions.length === 0 ? (
+                                <div className="empty-state">
+                                    <div className="empty-icon">📊</div>
+                                    <p>No transactions found.</p>
+                                    <p className="empty-hint">Add your first transaction to get started!</p>
+                                </div>
+                            ) : (
+                                <ul className="transaction-list">
+                                    {sortedTransactions.map((transaction) => (
+                                        <li key={transaction.id} className="transaction-item eco-card">
+                                            <div className="transaction-header">
+                                            <span className={`transaction-badge ${transaction.type.toLowerCase() === 'expense' ? 'expense-badge' : 'income-badge'}`}>
+                                                {transaction.type.toLowerCase() === 'expense' ? 'Expense' : 'Income'}
+                                            </span>
+                                                <span className="transaction-date">
+                                                {new Date(transaction.date).toLocaleDateString()}
+                                            </span>
+                                            </div>
 
-                    <div className="total-expense">
-                        <h4>Total Expense for Selected Period: £{totalExpense}</h4>
-                    </div>
+                                            <div className="transaction-body">
+                                                <div className="transaction-amount-container">
+                                                <span className={`transaction-amount ${transaction.type.toLowerCase() === 'expense' ? 'normal-amount' : 'income-amount'}`}>
+                                                    {transaction.type.toLowerCase() === 'expense' ? '' : '+'} £{transaction.amount}
+                                                </span>
+                                                </div>
 
-                    <div className="spending-distribution-chart">
-                        <h3>Your Spending Distribution</h3>
-                        <div className="chart-and-labels-container">
-                            <div className="chart-container">
-                                <Pie data={spendingDistributionData} options={pieChartOptions} />
-                            </div>
-                            <div className="category-labels">
-                                {spendingDistributionData.labels.map((label, index) => (
-                                    <div key={index} className="category-label">
-                                        <div className="category-color" style={{ backgroundColor: spendingDistributionData.datasets[0].backgroundColor[index] }}></div>
-                                        {label}
-                                    </div>
-                                ))}
-                            </div>
-                        </div>
-                    </div>
+                                                <div className="transaction-details">
+                                                    <div className="detail-row">
+                                                        <span className="detail-label">Category:</span>
+                                                        <span className="category-badge">
+                                                        {transaction.category.name}
+                                                    </span>
+                                                    </div>
 
-                    <div className="recommendations">
-                        <h4>Spending Recommendations</h4>
-                        <button onClick={fetchRecommendations} className="add-transaction-button" disabled={loading}>
-                            {loading ? <div className="spinner"></div> : (recommendations.length === 0 ? 'Generate Recommendations' : 'Regenerate Recommendations')}
-                        </button>
-                        <ul>
-                            {recommendations.map((recommendation, index) => (
-                                <li key={index}>{recommendation}</li>
-                            ))}
-                        </ul>
-                    </div>
-                </div>
-            </div>
+                                                    {transaction.description && (
+                                                        <div className="detail-row">
+                                                            <span className="detail-label">Description:</span>
+                                                            <span className="detail-value">{transaction.description}</span>
+                                                        </div>
+                                                    )}
 
-            {isCategoryPopupVisible && (
-                <div className="popup">
-                    <div className="popup-card">
-                        <h3 className="popup-title">Add a New Category</h3>
-                        <form className="popup-form">
-                            <input
-                                type="text"
-                                value={newCategory}
-                                onChange={(e) => setNewCategory(e.target.value)}
-                                placeholder="New Category Name"
-                                className="input-field"
-                            />
-                            <button
-                                type="button"
-                                onClick={handleAddCategory}
-                                className="submit-button"
-                            >
-                                Add Category
-                            </button>
-                            <button
-                                type="button"
-                                onClick={() => setCategoryPopupVisible(false)}
-                                className="cancel-button"
-                            >
-                                Cancel
-                            </button>
-                        </form>
-                    </div>
-                </div>
-            )}
+                                                    {transaction.carbonFootprint !== null && (
+                                                        <div className="detail-row">
+                                                            <span className="detail-label">Carbon:</span>
+                                                            <span className="carbon-badge">
+                                                            {transaction.carbonFootprint} kg CO<sub>2</sub>
+                                                        </span>
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            </div>
 
-            {isPopupVisible && !isCategoryPopupVisible && (
-                <div className="popup">
-                    <div className="popup-card">
-                        <h3 className="popup-title">Add a Transaction</h3>
-                        <form className="popup-form">
-                            <input
-                                type="number"
-                                name="amount"
-                                value={newTransaction.amount}
-                                onChange={handleChange}
-                                placeholder="Amount"
-                                className="input-field"
-                            />
-                            <select
-                                name="category"
-                                value={newTransaction.category ? newTransaction.category.id : ''}
-                                onChange={(e) => {
-                                    const selectedCategory = categories.find(
-                                        (cat) => cat.id === parseInt(e.target.value)
-                                    );
-                                    setNewTransaction({...newTransaction, category: selectedCategory});
-                                }}
-                                className="input-field"
-                            >
-                                <option value="" disabled>Select a category</option>
-                                {categories.map((category) => (
-                                    <option key={category.id} value={category.id}>
-                                        {category.name}
-                                    </option>
-                                ))}
-                            </select>
-                            <button
-                                type="button"
-                                onClick={() => setCategoryPopupVisible(true)}
-                                className="add-category-button"
-                            >
-                                Add a New Category
-                            </button>
-                            <select
-                                name="type"
-                                value={newTransaction.type}
-                                onChange={handleChange}
-                                className="input-field"
-                            >
-                                <option value="" disabled>Select a type</option>
-                                {transactionTypes.map((type, index) => (
-                                    <option key={index} value={type}>
-                                        {type}
-                                    </option>
-                                ))}
-                            </select>
-                            <input
-                                type="datetime-local"
-                                name="date"
-                                value={newTransaction.date}
-                                onChange={handleChange}
-                                className="input-field"
-                            />
-                            <input
-                                type="text"
-                                name="description"
-                                value={newTransaction.description}
-                                onChange={handleChange}
-                                placeholder="Description"
-                                className="input-field"
-                            />
-                            <div className="popup-buttons">
-                                <button type="button" onClick={handleAddTransaction} className="submit-button">
-                                    {newTransaction.id ? 'Edit' : 'Create'}
-                                </button>
-                                <button
-                                    type="button"
-                                    onClick={() => setPopupVisible(false)}
-                                    className="cancel-button"
-                                >
-                                    Cancel
-                                </button>
-                            </div>
-                        </form>
-                    </div>
-                </div>
-            )}
-            {isFilterPopupVisible && (
-                <div className="popup">
-                    <div className="popup-card">
-                        <h3 className="popup-title">Filter & Sort Transactions</h3>
-                        <form className="popup-form">
-                            <select
-                                value={filterType}
-                                onChange={(e) => setFilterType(e.target.value)}
-                                className="input-field"
-                            >
-                                <option value="">All Types</option>
-                                {transactionTypes.map((type, index) => (
-                                    <option key={index} value={type}>
-                                        {type}
-                                    </option>
-                                ))}
-                            </select>
-                            <select
-                                value={filterCategory}
-                                onChange={(e) => setFilterCategory(e.target.value)}
-                                className="input-field"
-                            >
-                                <option value="">All Categories</option>
-                                {categories.map((category) => (
-                                    <option key={category.id} value={category.name}>
-                                        {category.name}
-                                    </option>
-                                ))}
-                            </select>
-                            <select
-                                value={selectedPeriod}
-                                onChange={(e) => setSelectedPeriod(e.target.value)}
-                                className="input-field"
-                            >
-                                <option value="currentMonth">Current Month</option>
-                                <option value="lastMonth">Last Month</option>
-                                <option value="last3Months">Last 3 Months</option>
-                                <option value="custom">Custom</option>
-                            </select>
-                            {selectedPeriod === 'custom' && (
-                                <>
-                                    <input
-                                        type="date"
-                                        value={customStartDate}
-                                        onChange={(e) => setCustomStartDate(e.target.value)}
-                                        className="input-field"
-                                    />
-                                    <input
-                                        type="date"
-                                        value={customEndDate}
-                                        onChange={(e) => setCustomEndDate(e.target.value)}
-                                        className="input-field"
-                                    />
-                                </>
+                                            <div className="transaction-actions">
+                                                <button
+                                                    onClick={() => handleEditTransaction(transaction)}
+                                                    className="action-button edit-button"
+                                                    aria-label="Edit transaction"
+                                                >
+                                                    <FaEdit />
+                                                </button>
+                                                <button
+                                                    onClick={() => handleDeleteTransaction(transaction.id)}
+                                                    className="action-button delete-button"
+                                                    aria-label="Delete transaction"
+                                                >
+                                                    <FaTrash />
+                                                </button>
+                                            </div>
+                                        </li>
+                                    ))}
+                                </ul>
                             )}
-                            <select
-                                value={sortOption}
-                                onChange={(e) => setSortOption(e.target.value)}
-                                className="input-field"
-                            >
-                                <option value="dateDesc">Most Recent</option>
-                                <option value="dateAsc">Oldest First</option>
-                                <option value="amountAsc">Amount Ascending</option>
-                                <option value="amountDesc">Amount Descending</option>
-                                <option value="carbonAsc">Carbon Footprint Ascending</option>
-                                <option value="carbonDesc">Carbon Footprint Descending</option>
-                            </select>
-                            <div className="popup-buttons">
-                                <button type="button" onClick={() => setFilterPopupVisible(false)} className="cancel-button">
-                                    Close
+                        </div>
+                    </div>
+                </Col>
+
+                <Col lg={7}>
+                    <div className="right-section">
+                        <div className="balance-card eco-card">
+                            <div className={`balance-amount ${balanceClass}`}>
+                                <h3>Your Current Balance</h3>
+                                <span className="balance-value">£{currentBalance}</span>
+                            </div>
+
+                            {selectedPeriod === 'currentMonth' && (
+                                <div className="comparison-toggle">
+                                    <label className="toggle-switch">
+                                        <input
+                                            type="checkbox"
+                                            checked={comparePreviousMonth}
+                                            onChange={() => setComparePreviousMonth(!comparePreviousMonth)}
+                                        />
+                                        <span className="toggle-slider"></span>
+                                    </label>
+                                    <span className="toggle-label">Compare with Previous Month</span>
+                                </div>
+                            )}
+                        </div>
+
+                        <div className="spending-chart eco-card">
+                            <h3 className="chart-title">Cumulative Spending Over Time</h3>
+                            <div className="chart-container">
+                                <Line
+                                    data={chartData}
+                                    options={{
+                                        ...chartOptions,
+                                        maintainAspectRatio: false,
+                                        responsive: true
+                                    }}
+                                />
+                            </div>
+                            <div className="total-expense">
+                                <span>Total Expense for Selected Period:</span>
+                                <span className="expense-value">£{totalExpense}</span>
+                            </div>
+                        </div>
+
+                        <div className="distribution-chart eco-card">
+                            <h3 className="chart-title">Your Spending Distribution</h3>
+                            <div className="chart-and-labels">
+                                <div className="pie-chart-container">
+                                    <Pie
+                                        data={spendingDistributionData}
+                                        options={{
+                                            ...pieChartOptions,
+                                            maintainAspectRatio: false,
+                                            responsive: true
+                                        }}
+                                    />
+                                </div>
+                                <div className="category-legend">
+                                    {spendingDistributionData.labels.map((label, index) => (
+                                        <div key={index} className="legend-item">
+                                            <div
+                                                className="color-indicator"
+                                                style={{ backgroundColor: spendingDistributionData.datasets[0].backgroundColor[index] }}
+                                            ></div>
+                                            <span className="legend-label">{label}</span>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="recommendations eco-card">
+                            <div className="recommendations-header">
+                                <h3 className="chart-title">Spending Recommendations</h3>
+                                <button
+                                    onClick={fetchRecommendations}
+                                    className="btn-eco-secondary"
+                                    disabled={loading}
+                                >
+                                    {loading ? (
+                                        <span className="spinner-container">
+                                        <span className="spinner"></span>
+                                    </span>
+                                    ) : (
+                                        recommendations.length === 0 ? 'Generate Recommendations' : 'Regenerate'
+                                    )}
                                 </button>
                             </div>
-                        </form>
+
+                            {recommendations.length > 0 ? (
+                                <ul className="recommendations-list">
+                                    {recommendations.map((recommendation, index) => (
+                                        <li key={index} className="recommendation-item">
+                                            <span className="recommendation-icon">💡</span>
+                                            <span className="recommendation-text">{recommendation}</span>
+                                        </li>
+                                    ))}
+                                </ul>
+                            ) : (
+                                <div className="empty-recommendations">
+                                    {loading ? (
+                                        <p>Generating personalized recommendations...</p>
+                                    ) : (
+                                        <p>Generate recommendations based on your spending patterns.</p>
+                                    )}
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                </Col>
+            </Row>
+
+            {/* Add Category Popup */}
+            {isCategoryPopupVisible && (
+                <div className="popup-overlay">
+                    <div className="popup-container eco-card">
+                        <div className="popup-header">
+                            <h3>Add a New Category</h3>
+                            <button
+                                className="close-button"
+                                onClick={() => setCategoryPopupVisible(false)}
+                                aria-label="Close popup"
+                            >
+                                ×
+                            </button>
+                        </div>
+                        <div className="popup-body">
+                            <form className="category-form">
+                                <div className="form-group">
+                                    <label htmlFor="categoryName">Category Name</label>
+                                    <input
+                                        type="text"
+                                        id="categoryName"
+                                        value={newCategory}
+                                        onChange={(e) => setNewCategory(e.target.value)}
+                                        placeholder="Enter category name"
+                                        className="form-control"
+                                    />
+                                </div>
+
+                                <div className="popup-actions">
+                                    <button
+                                        type="button"
+                                        onClick={handleAddCategory}
+                                        className="btn-eco-primary"
+                                    >
+                                        Add Category
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={() => setCategoryPopupVisible(false)}
+                                        className="btn-eco-secondary"
+                                    >
+                                        Cancel
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Add/Edit Transaction Popup */}
+            {isPopupVisible && !isCategoryPopupVisible && (
+                <div className="popup-overlay">
+                    <div className="popup-container transaction-popup eco-card">
+                        <div className="popup-header">
+                            <h3>{newTransaction.id ? 'Edit Transaction' : 'Add a Transaction'}</h3>
+                            <button
+                                className="close-button"
+                                onClick={() => setPopupVisible(false)}
+                                aria-label="Close popup"
+                            >
+                                ×
+                            </button>
+                        </div>
+                        <div className="popup-body">
+                            <form className="transaction-form">
+                                <Row>
+                                    <Col md={6}>
+                                        <div className="form-group">
+                                            <label htmlFor="transactionAmount">Amount</label>
+                                            <input
+                                                type="number"
+                                                id="transactionAmount"
+                                                name="amount"
+                                                value={newTransaction.amount}
+                                                onChange={handleChange}
+                                                placeholder="Enter amount"
+                                                className="form-control"
+                                            />
+                                        </div>
+                                    </Col>
+                                    <Col md={6}>
+                                        <div className="form-group">
+                                            <label htmlFor="transactionType">Type</label>
+                                            <select
+                                                id="transactionType"
+                                                name="type"
+                                                value={newTransaction.type}
+                                                onChange={handleChange}
+                                                className="form-control"
+                                            >
+                                                <option value="" disabled>Select type</option>
+                                                {transactionTypes.map((type, index) => (
+                                                    <option key={index} value={type}>
+                                                        {type}
+                                                    </option>
+                                                ))}
+                                            </select>
+                                        </div>
+                                    </Col>
+                                </Row>
+
+                                <div className="form-group">
+                                    <label htmlFor="transactionCategory">Category</label>
+                                    <div className="category-selection">
+                                        <select
+                                            id="transactionCategory"
+                                            name="category"
+                                            value={newTransaction.category ? newTransaction.category.id : ''}
+                                            onChange={(e) => {
+                                                const selectedCategory = categories.find(
+                                                    (cat) => cat.id === parseInt(e.target.value)
+                                                );
+                                                setNewTransaction({...newTransaction, category: selectedCategory});
+                                            }}
+                                            className="form-control"
+                                        >
+                                            <option value="" disabled>Select a category</option>
+                                            {categories.map((category) => (
+                                                <option key={category.id} value={category.id}>
+                                                    {category.name}
+                                                </option>
+                                            ))}
+                                        </select>
+                                        <button
+                                            type="button"
+                                            onClick={() => setCategoryPopupVisible(true)}
+                                            className="add-category-btn"
+                                        >
+                                            +
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <div className="form-group">
+                                    <label htmlFor="transactionDate">Date</label>
+                                    <input
+                                        type="datetime-local"
+                                        id="transactionDate"
+                                        name="date"
+                                        value={newTransaction.date}
+                                        onChange={handleChange}
+                                        className="form-control"
+                                    />
+                                </div>
+
+                                <div className="form-group">
+                                    <label htmlFor="transactionDescription">Description</label>
+                                    <input
+                                        type="text"
+                                        id="transactionDescription"
+                                        name="description"
+                                        value={newTransaction.description}
+                                        onChange={handleChange}
+                                        placeholder="Enter description"
+                                        className="form-control"
+                                    />
+                                </div>
+
+                                <div className="popup-actions">
+                                    <button
+                                        type="button"
+                                        onClick={handleAddTransaction}
+                                        className="btn-eco-primary"
+                                    >
+                                        {newTransaction.id ? 'Save Changes' : 'Add Transaction'}
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={() => setPopupVisible(false)}
+                                        className="btn-eco-secondary"
+                                    >
+                                        Cancel
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Filter & Sort Popup */}
+            {isFilterPopupVisible && (
+                <div className="popup-overlay">
+                    <div className="popup-container filter-popup eco-card">
+                        <div className="popup-header">
+                            <h3>Filter & Sort Transactions</h3>
+                            <button
+                                className="close-button"
+                                onClick={() => setFilterPopupVisible(false)}
+                                aria-label="Close popup"
+                            >
+                                ×
+                            </button>
+                        </div>
+                        <div className="popup-body">
+                            <form className="filter-form">
+                                <div className="form-group">
+                                    <label htmlFor="filterType">Transaction Type</label>
+                                    <select
+                                        id="filterType"
+                                        value={filterType}
+                                        onChange={(e) => setFilterType(e.target.value)}
+                                        className="form-control"
+                                    >
+                                        <option value="">All Types</option>
+                                        {transactionTypes.map((type, index) => (
+                                            <option key={index} value={type}>
+                                                {type}
+                                            </option>
+                                        ))}
+                                    </select>
+                                </div>
+
+                                <div className="form-group">
+                                    <label htmlFor="filterCategory">Category</label>
+                                    <select
+                                        id="filterCategory"
+                                        value={filterCategory}
+                                        onChange={(e) => setFilterCategory(e.target.value)}
+                                        className="form-control"
+                                    >
+                                        <option value="">All Categories</option>
+                                        {categories.map((category) => (
+                                            <option key={category.id} value={category.name}>
+                                                {category.name}
+                                            </option>
+                                        ))}
+                                    </select>
+                                </div>
+
+                                <div className="form-group">
+                                    <label htmlFor="selectedPeriod">Time Period</label>
+                                    <select
+                                        id="selectedPeriod"
+                                        value={selectedPeriod}
+                                        onChange={(e) => setSelectedPeriod(e.target.value)}
+                                        className="form-control"
+                                    >
+                                        <option value="currentMonth">Current Month</option>
+                                        <option value="lastMonth">Last Month</option>
+                                        <option value="last3Months">Last 3 Months</option>
+                                        <option value="custom">Custom Range</option>
+                                    </select>
+                                </div>
+
+                                {selectedPeriod === 'custom' && (
+                                    <Row className="g-3">
+                                        <Col sm={6}>
+                                            <div className="form-group">
+                                                <label htmlFor="customStartDate">Start Date</label>
+                                                <input
+                                                    type="date"
+                                                    id="customStartDate"
+                                                    value={customStartDate}
+                                                    onChange={(e) => setCustomStartDate(e.target.value)}
+                                                    className="form-control"
+                                                />
+                                            </div>
+                                        </Col>
+                                        <Col sm={6}>
+                                            <div className="form-group">
+                                                <label htmlFor="customEndDate">End Date</label>
+                                                <input
+                                                    type="date"
+                                                    id="customEndDate"
+                                                    value={customEndDate}
+                                                    onChange={(e) => setCustomEndDate(e.target.value)}
+                                                    className="form-control"
+                                                />
+                                            </div>
+                                        </Col>
+                                    </Row>
+                                )}
+
+                                <div className="form-group">
+                                    <label htmlFor="sortOption">Sort By</label>
+                                    <select
+                                        id="sortOption"
+                                        value={sortOption}
+                                        onChange={(e) => setSortOption(e.target.value)}
+                                        className="form-control"
+                                    >
+                                        <option value="dateDesc">Most Recent</option>
+                                        <option value="dateAsc">Oldest First</option>
+                                        <option value="amountAsc">Amount (Low to High)</option>
+                                        <option value="amountDesc">Amount (High to Low)</option>
+                                        <option value="carbonAsc">Carbon Footprint (Low to High)</option>
+                                        <option value="carbonDesc">Carbon Footprint (High to Low)</option>
+                                    </select>
+                                </div>
+
+                                <div className="popup-actions">
+                                    <button
+                                        type="button"
+                                        onClick={() => setFilterPopupVisible(false)}
+                                        className="btn-eco-primary"
+                                    >
+                                        Apply Filters
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={() => {
+                                            setFilterType('');
+                                            setFilterCategory('');
+                                            setSelectedPeriod('currentMonth');
+                                            setSortOption('dateDesc');
+                                            setFilterPopupVisible(false);
+                                        }}
+                                        className="btn-eco-secondary"
+                                    >
+                                        Reset Filters
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
                     </div>
                 </div>
             )}

@@ -1,9 +1,11 @@
 import React, { useCallback, useState, useEffect } from 'react';
-import './CarbonFootprint.css';
+import { Row, Col, Container } from 'react-bootstrap';
+import { FaFilter, FaLeaf, FaSeedling } from 'react-icons/fa';
 import axios from 'axios';
 import { Line, Pie } from 'react-chartjs-2';
 import { Chart as ChartJS, CategoryScale, LinearScale, PointElement, LineElement, BarElement, Title, Tooltip, Legend, TimeScale } from 'chart.js';
 import 'chartjs-adapter-date-fns';
+import './CarbonFootprint.css';
 
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, BarElement, Title, Tooltip, Legend, TimeScale);
 
@@ -24,6 +26,7 @@ const CarbonFootprint = () => {
     const [customEndDate, setCustomEndDate] = useState('');
     const [isFilterPopupVisible, setFilterPopupVisible] = useState(false);
 
+    // Fetch data functions
     const fetchTransactions = useCallback(async () => {
         try {
             const token = localStorage.getItem('jwtToken');
@@ -82,6 +85,7 @@ const CarbonFootprint = () => {
         }
     }, []);
 
+    // Data processing functions
     const filterTransactions = useCallback((transactions, period) => {
         const currentDate = new Date();
         let startDate, endDate;
@@ -136,6 +140,7 @@ const CarbonFootprint = () => {
         setData(cumulative);
     }, [filterTransactions]);
 
+    // Effect hooks
     useEffect(() => {
         fetchTransactions();
         fetchCategories();
@@ -149,6 +154,7 @@ const CarbonFootprint = () => {
         }
     }, [transactions, selectedCategory, selectedPeriod, customStartDate, customEndDate, calculateTotalCarbonFootprint, calculateCumulativeData]);
 
+    // Chart data preparation
     const lineChartData = {
         labels: comparePreviousMonth ? Array.from({ length: 31 }, (_, i) => i + 1) : cumulativeData.map(data => data.date),
         datasets: [
@@ -170,6 +176,8 @@ const CarbonFootprint = () => {
     };
 
     const lineChartOptions = {
+        maintainAspectRatio: false,
+        responsive: true,
         plugins: {
             tooltip: {
                 callbacks: {
@@ -179,6 +187,9 @@ const CarbonFootprint = () => {
                         return `Individual: ${individualFootprint} kg CO2\nCumulative: ${cumulativeSum} kg CO2`;
                     }
                 }
+            },
+            legend: {
+                position: 'top',
             }
         },
         scales: {
@@ -191,6 +202,9 @@ const CarbonFootprint = () => {
                 ticks: {
                     stepSize: 1,
                 },
+                grid: {
+                    display: false
+                }
             } : {
                 type: 'time',
                 time: {
@@ -206,12 +220,18 @@ const CarbonFootprint = () => {
                     display: true,
                     text: 'Date',
                 },
+                grid: {
+                    display: false
+                }
             },
             y: {
                 title: {
                     display: true,
                     text: 'Cumulative Carbon Footprint (kg CO2)',
                 },
+                grid: {
+                    borderDash: [2, 4]
+                }
             },
         },
     };
@@ -229,11 +249,19 @@ const CarbonFootprint = () => {
         const labels = Object.keys(categoryTotals);
         const data = Object.values(categoryTotals);
 
+        // Generate nice colors for the chart
+        const colors = labels.map((_, index) => {
+            const hue = (index * 137) % 360; // Golden ratio to spread colors
+            return `hsl(${hue}, 70%, 60%)`;
+        });
+
         return {
             labels,
             datasets: [{
                 data,
-                backgroundColor: labels.map((_, index) => `hsl(${index * 360 / labels.length}, 70%, 50%)`),
+                backgroundColor: colors,
+                borderWidth: 1,
+                borderColor: colors.map(color => color.replace('60%', '50%')),
             }],
         };
     };
@@ -241,124 +269,304 @@ const CarbonFootprint = () => {
     const carbonFootprintDistributionData = calculateCarbonFootprintDistribution(transactions);
 
     const pieChartOptions = {
+        maintainAspectRatio: false,
+        responsive: true,
         plugins: {
             legend: {
                 display: false
+            },
+            tooltip: {
+                callbacks: {
+                    label: function(context) {
+                        const value = context.raw.toFixed(2);
+                        const percentage = ((context.raw / carbonFootprintDistributionData.datasets[0].data.reduce((a, b) => a + b, 0)) * 100).toFixed(1);
+                        return `${context.label}: ${value} kg CO2 (${percentage}%)`;
+                    }
+                }
             }
         }
     };
 
+    // Get period name for display
+    const getPeriodName = () => {
+        switch (selectedPeriod) {
+            case 'currentMonth': return 'Current Month';
+            case 'lastMonth': return 'Last Month';
+            case 'last3Months': return 'Last 3 Months';
+            case 'custom': return 'Custom Period';
+            default: return 'Selected Period';
+        }
+    };
+
     return (
-        <div className="carbon-footprint-container">
-            <div className="header">
-                <h2>Carbon Footprint</h2>
-                <p>Track your carbon footprint and see the impact of your everyday spending!</p>
+        <Container className="carbon-footprint-container">
+            <div className="section-header text-center">
+                <h2 className="page-title">Carbon Footprint</h2>
+                <p className="section-subtitle">Track your carbon footprint and see the environmental impact of your everyday spending!</p>
             </div>
-            <div className="carbon-footprint-chart">
-                <h3>Cumulative Carbon Footprint Over Time</h3>
-                <p>This line chart shows the cumulative total of your carbon emissions over time based on your spending transactions.</p>
-                <button onClick={() => setFilterPopupVisible(true)} className="filter-button">Filter</button>
-                <div className="total-carbon-footprint">
-                    <h3>Total Carbon Footprint for {selectedPeriod === 'currentMonth' ? 'Current Month' : selectedPeriod === 'lastMonth' ? 'Last Month' : selectedPeriod === 'last3Months' ? 'Last 3 Months' : 'Custom Period'}: {totalCarbonFootprint} kg CO2</h3>
-                </div>
-                <Line data={lineChartData} options={lineChartOptions} />
-            </div>
-            <div className="carbon-footprint-distribution-chart">
-                <h3>Your Carbon Footprint Distribution</h3>
-                <div className="chart-and-labels-container">
-                    <div className="chart-container">
-                        <Pie data={carbonFootprintDistributionData} options={pieChartOptions} />
-                    </div>
-                    <div className="category-labels">
-                        {carbonFootprintDistributionData.labels.map((label, index) => (
-                            <div key={index} className="category-label">
-                                <div className="category-color" style={{ backgroundColor: carbonFootprintDistributionData.datasets[0].backgroundColor[index] }}></div>
-                                {label}
+
+            <Row className="g-4">
+                <Col lg={8}>
+                    <div className="carbon-footprint-chart eco-card">
+                        <div className="chart-header">
+                            <div>
+                                <h3 className="chart-title">Cumulative Carbon Footprint</h3>
+                                <p className="chart-description">This chart shows how your carbon emissions accumulate over time based on your spending.</p>
                             </div>
-                        ))}
+                            <button
+                                onClick={() => setFilterPopupVisible(true)}
+                                className="btn-eco-secondary"
+                            >
+                                <FaFilter className="me-2" /> Filter Data
+                            </button>
+                        </div>
+
+                        <div className="total-carbon-footprint">
+                            <div className="carbon-icon"><FaLeaf /></div>
+                            <div className="carbon-stats">
+                                <span className="carbon-label">Total Carbon Footprint for {getPeriodName()}</span>
+                                <span className="carbon-value">{totalCarbonFootprint} kg CO<sub>2</sub></span>
+                            </div>
+                        </div>
+
+                        <div className="line-chart-container">
+                            <Line data={lineChartData} options={lineChartOptions} />
+                        </div>
                     </div>
-                </div>
-            </div>
-            <div className="recommendations">
-                <h4>Carbon Footprint Recommendations</h4>
-                <button onClick={fetchRecommendations} className="add-transaction-button" disabled={loadingRecommendations}>
-                    {loadingRecommendations ? <div className="spinner"></div> : (recommendations.length === 0 ? 'Generate Recommendations' : 'Regenerate Recommendations')}
-                </button>
-                <ul>
-                    {recommendations.map((recommendation, index) => (
-                        <li key={index}>{recommendation}</li>
-                    ))}
-                </ul>
-            </div>
-            <div className="benchmarks">
-                <h4>Carbon Footprint Benchmarks</h4>
-                <button onClick={fetchBenchmarks} className="add-transaction-button" disabled={loadingBenchmarks}>
-                    {loadingBenchmarks ? <div className="spinner"></div> : (benchmarks.length === 0 ? 'Generate Benchmarks' : 'Regenerate Benchmarks')}
-                </button>
-                <ul>
-                    {benchmarks.map((benchmark, index) => (
-                        <li key={index}>{benchmark}</li>
-                    ))}
-                </ul>
-            </div>
-            {isFilterPopupVisible && (
-                <div className="popup">
-                    <div className="popup-card">
-                        <h3 className="popup-title">Filter & Sort</h3>
-                        <form className="popup-form">
-                            <select value={selectedCategory} onChange={(e) => setSelectedCategory(e.target.value)} className="input-field">
-                                <option value="">All Categories</option>
-                                {categories.map((category) => (
-                                    <option key={category.id} value={category.name}>
-                                        {category.name}
-                                    </option>
-                                ))}
-                            </select>
-                            <select value={selectedPeriod} onChange={(e) => setSelectedPeriod(e.target.value)} className="input-field">
-                                <option value="currentMonth">Current Month</option>
-                                <option value="lastMonth">Last Month</option>
-                                <option value="last3Months">Last 3 Months</option>
-                                <option value="custom">Custom</option>
-                            </select>
-                            {selectedPeriod === 'custom' && (
-                                <>
-                                    <input
-                                        type="date"
-                                        value={customStartDate}
-                                        onChange={(e) => setCustomStartDate(e.target.value)}
-                                        className="input-field"
-                                    />
-                                    <input
-                                        type="date"
-                                        value={customEndDate}
-                                        onChange={(e) => setCustomEndDate(e.target.value)}
-                                        className="input-field"
-                                    />
-                                </>
-                            )}
-                            {selectedPeriod === 'currentMonth' && (
-                                <div className="toggle-container">
-                                    <label className="switch">
-                                        <input
-                                            type="checkbox"
-                                            checked={comparePreviousMonth}
-                                            onChange={() => setComparePreviousMonth(!comparePreviousMonth)}
-                                        />
-                                        <span className="slider round"></span>
-                                    </label>
-                                    <span className="toggle-label">Compare with Previous Month</span>
+                </Col>
+
+                <Col lg={4}>
+                    <div className="distribution-chart eco-card">
+                        <h3 className="chart-title">Carbon Footprint by Category</h3>
+                        <div className="pie-chart-container">
+                            <Pie data={carbonFootprintDistributionData} options={pieChartOptions} />
+                        </div>
+                        <div className="category-legend">
+                            {carbonFootprintDistributionData.labels.map((label, index) => (
+                                <div key={index} className="legend-item">
+                                    <div
+                                        className="color-indicator"
+                                        style={{ backgroundColor: carbonFootprintDistributionData.datasets[0].backgroundColor[index] }}
+                                    ></div>
+                                    <span className="legend-label">{label}</span>
+                                    <span className="legend-value">
+                                        {carbonFootprintDistributionData.datasets[0].data[index].toFixed(1)} kg
+                                    </span>
                                 </div>
-                            )}
-                            <div className="popup-buttons">
-                                <button type="button" onClick={() => setFilterPopupVisible(false)} className="cancel-button">
-                                    Close
-                                </button>
+                            ))}
+                        </div>
+                    </div>
+                </Col>
+            </Row>
+
+            <Row className="g-4 mt-4">
+                <Col md={6}>
+                    <div className="carbon-recommendations eco-card">
+                        <div className="recommendations-header">
+                            <h3 className="chart-title">
+                                <FaSeedling className="me-2" />
+                                Eco-Friendly Recommendations
+                            </h3>
+                            <button
+                                onClick={fetchRecommendations}
+                                className="btn-eco-secondary"
+                                disabled={loadingRecommendations}
+                            >
+                                {loadingRecommendations ? (
+                                    <span className="spinner-container">
+                                        <span className="spinner"></span>
+                                    </span>
+                                ) : (
+                                    recommendations.length === 0 ? 'Generate Tips' : 'Refresh Tips'
+                                )}
+                            </button>
+                        </div>
+
+                        {recommendations.length > 0 ? (
+                            <ul className="recommendations-list">
+                                {recommendations.map((recommendation, index) => (
+                                    <li key={index} className="recommendation-item">
+                                        <span className="recommendation-icon">💡</span>
+                                        <span className="recommendation-text">{recommendation}</span>
+                                    </li>
+                                ))}
+                            </ul>
+                        ) : (
+                            <div className="empty-recommendations">
+                                {loadingRecommendations ? (
+                                    <p>Generating personalized recommendations...</p>
+                                ) : (
+                                    <p>Generate recommendations to reduce your carbon footprint.</p>
+                                )}
                             </div>
-                        </form>
+                        )}
+                    </div>
+                </Col>
+
+                <Col md={6}>
+                    <div className="carbon-benchmarks eco-card">
+                        <div className="benchmarks-header">
+                            <h3 className="chart-title">
+                                <i className="benchmark-icon">📊</i>
+                                Carbon Footprint Benchmarks
+                            </h3>
+                            <button
+                                onClick={fetchBenchmarks}
+                                className="btn-eco-secondary"
+                                disabled={loadingBenchmarks}
+                            >
+                                {loadingBenchmarks ? (
+                                    <span className="spinner-container">
+                                        <span className="spinner"></span>
+                                    </span>
+                                ) : (
+                                    benchmarks.length === 0 ? 'Show Benchmarks' : 'Refresh Benchmarks'
+                                )}
+                            </button>
+                        </div>
+
+                        {benchmarks.length > 0 ? (
+                            <ul className="benchmarks-list">
+                                {benchmarks.map((benchmark, index) => (
+                                    <li key={index} className="benchmark-item">
+                                        <span className="benchmark-icon">📈</span>
+                                        <span className="benchmark-text">{benchmark}</span>
+                                    </li>
+                                ))}
+                            </ul>
+                        ) : (
+                            <div className="empty-benchmarks">
+                                {loadingBenchmarks ? (
+                                    <p>Loading carbon footprint benchmarks...</p>
+                                ) : (
+                                    <p>View benchmarks to compare your carbon footprint with others.</p>
+                                )}
+                            </div>
+                        )}
+                    </div>
+                </Col>
+            </Row>
+
+            {/* Filter Popup */}
+            {isFilterPopupVisible && (
+                <div className="popup-overlay">
+                    <div className="popup-container filter-popup eco-card">
+                        <div className="popup-header">
+                            <h3>Filter Carbon Footprint Data</h3>
+                            <button
+                                className="close-button"
+                                onClick={() => setFilterPopupVisible(false)}
+                                aria-label="Close popup"
+                            >
+                                ×
+                            </button>
+                        </div>
+                        <div className="popup-body">
+                            <form className="filter-form">
+                                <div className="form-group">
+                                    <label htmlFor="filterCategory">Category</label>
+                                    <select
+                                        id="filterCategory"
+                                        value={selectedCategory}
+                                        onChange={(e) => setSelectedCategory(e.target.value)}
+                                        className="form-control"
+                                    >
+                                        <option value="">All Categories</option>
+                                        {categories.map((category) => (
+                                            <option key={category.id} value={category.name}>
+                                                {category.name}
+                                            </option>
+                                        ))}
+                                    </select>
+                                </div>
+
+                                <div className="form-group">
+                                    <label htmlFor="selectedPeriod">Time Period</label>
+                                    <select
+                                        id="selectedPeriod"
+                                        value={selectedPeriod}
+                                        onChange={(e) => setSelectedPeriod(e.target.value)}
+                                        className="form-control"
+                                    >
+                                        <option value="currentMonth">Current Month</option>
+                                        <option value="lastMonth">Last Month</option>
+                                        <option value="last3Months">Last 3 Months</option>
+                                        <option value="custom">Custom Range</option>
+                                    </select>
+                                </div>
+
+                                {selectedPeriod === 'custom' && (
+                                    <Row className="g-3">
+                                        <Col sm={6}>
+                                            <div className="form-group">
+                                                <label htmlFor="customStartDate">Start Date</label>
+                                                <input
+                                                    type="date"
+                                                    id="customStartDate"
+                                                    value={customStartDate}
+                                                    onChange={(e) => setCustomStartDate(e.target.value)}
+                                                    className="form-control"
+                                                />
+                                            </div>
+                                        </Col>
+                                        <Col sm={6}>
+                                            <div className="form-group">
+                                                <label htmlFor="customEndDate">End Date</label>
+                                                <input
+                                                    type="date"
+                                                    id="customEndDate"
+                                                    value={customEndDate}
+                                                    onChange={(e) => setCustomEndDate(e.target.value)}
+                                                    className="form-control"
+                                                />
+                                            </div>
+                                        </Col>
+                                    </Row>
+                                )}
+
+                                {selectedPeriod === 'currentMonth' && (
+                                    <div className="form-group">
+                                        <div className="comparison-toggle">
+                                            <label className="toggle-switch">
+                                                <input
+                                                    type="checkbox"
+                                                    checked={comparePreviousMonth}
+                                                    onChange={() => setComparePreviousMonth(!comparePreviousMonth)}
+                                                />
+                                                <span className="toggle-slider"></span>
+                                            </label>
+                                            <span className="toggle-label">Compare with Previous Month</span>
+                                        </div>
+                                    </div>
+                                )}
+
+                                <div className="popup-actions">
+                                    <button
+                                        type="button"
+                                        onClick={() => setFilterPopupVisible(false)}
+                                        className="btn-eco-primary"
+                                    >
+                                        Apply Filters
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={() => {
+                                            setSelectedCategory('');
+                                            setSelectedPeriod('currentMonth');
+                                            setComparePreviousMonth(false);
+                                            setFilterPopupVisible(false);
+                                        }}
+                                        className="btn-eco-secondary"
+                                    >
+                                        Reset Filters
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
                     </div>
                 </div>
             )}
-        </div>
+        </Container>
     );
 };
 

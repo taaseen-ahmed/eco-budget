@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { FaEdit, FaTrash } from 'react-icons/fa';
+import { Container, Row, Col, Form, Alert } from 'react-bootstrap';
+import { FaEdit, FaTrash, FaPlus, FaLeaf, FaChartLine } from 'react-icons/fa';
 import axios from 'axios';
 import './Budget.css';
 
@@ -119,6 +120,7 @@ const Budget = () => {
     const handleClosePopup = () => {
         setBudgetPopupVisible(false);
         setGoalPopupVisible(false);
+        setAlertMessage('');
     };
 
     const handleAddOrEditBudget = async () => {
@@ -230,13 +232,13 @@ const Budget = () => {
     };
 
     const filteredBudgets = budgets.filter(budget => {
-        const matchesSearchQuery = budget.categoryName.toLowerCase().includes(searchQuery.toLowerCase());
+        const matchesSearchQuery = budget.categoryName?.toLowerCase().includes(searchQuery.toLowerCase()) || false;
         const matchesFilterCategory = filterCategory ? budget.categoryId === parseInt(filterCategory) : true;
         return matchesSearchQuery && matchesFilterCategory;
     });
 
     const filteredGoals = goals.filter(goal => {
-        const matchesSearchQuery = goal.categoryName ? goal.categoryName.toLowerCase().includes(searchQuery.toLowerCase()) : false;
+        const matchesSearchQuery = goal.categoryName?.toLowerCase().includes(searchQuery.toLowerCase()) || false;
         const matchesFilterCategory = filterCategory ? goal.categoryId === parseInt(filterCategory) : true;
         return matchesSearchQuery && matchesFilterCategory;
     });
@@ -244,251 +246,468 @@ const Budget = () => {
     const currentBudgets = filteredBudgets.filter(budget => new Date(budget.endDate) >= new Date());
     const pastBudgets = filteredBudgets.filter(budget => new Date(budget.endDate) < new Date());
 
-    const BudgetList = ({ title, budgets }) => (
-        <div className="budgets-list">
-            <h3>{title}</h3>
-            {budgets.length === 0 ? (
-                <p className="empty-state">No {title.toLowerCase()} found.</p>
-            ) : (
-                <ul>
-                    {budgets.map((budget) => (
-                        <li key={budget.id} className="budget-item">
-                            <div className="budget-detail">
-                                <strong>Budget Amount:</strong> £{budget.amount} <br/>
-                                <strong>Category:</strong> {budget.categoryName || 'No category'} <br/>
-                                <strong>Total Spent:</strong> £{budget.totalSpent} <br/>
-                                <strong>Period:</strong> {new Date(budget.startDate).toLocaleDateString()} - {new Date(budget.endDate).toLocaleDateString()} <br/>
-                                {budget.totalSpent > budget.amount && (
-                                    <div className="budget-exceeded">Budget Exceeded!</div>
-                                )}
-                                <div className="progress-bar-container">
-                                    <progress value={budget.totalSpent} max={budget.amount}></progress>
-                                </div>
-                            </div>
-                            <div className="budget-actions">
-                                <button onClick={() => handleEditBudgetClick(budget)} className="edit-button">
-                                    <FaEdit/> Edit
-                                </button>
-                                <button onClick={() => handleDeleteBudget(budget.id)}
-                                        className="delete-button">
-                                    <FaTrash/> Delete
-                                </button>
-                            </div>
-                        </li>
-                    ))}
-                </ul>
-            )}
-        </div>
-    );
+    const getProgressColor = (current, max) => {
+        const ratio = current / max;
+        if (ratio < 0.5) return "var(--success-color)";
+        if (ratio < 0.8) return "#FFC107"; // Warning yellow
+        return "var(--danger-color)";
+    };
 
-    const GoalList = ({ title, goals }) => (
-        <div className="goals-list">
-            <h3>{title}</h3>
-            {goals.length === 0 ? (
-                <p className="empty-state">No {title.toLowerCase()} found.</p>
-            ) : (
-                <ul>
-                    {goals.map((goal) => (
-                        <li key={goal.id} className="goal-item">
-                            <div className="goal-detail">
-                                <strong>Carbon Footprint Goal:</strong> {goal.amount} kg CO2 <br/>
-                                <strong>Category:</strong> {goal.categoryName || 'No category'} <br/>
-                                <strong>Total Carbon Footprint:</strong> {goal.totalCarbonFootprint} kg CO2 <br/>
-                                <strong>Period:</strong> {new Date(goal.startDate).toLocaleDateString()} - {new Date(goal.endDate).toLocaleDateString()} <br/>
-                                <div className="progress-bar-container">
-                                    <progress value={goal.totalCarbonFootprint} max={goal.amount}></progress>
-                                </div>
-                            </div>
-                            <div className="goal-actions">
-                                <button onClick={() => handleEditGoalClick(goal)} className="edit-button">
-                                    <FaEdit/> Edit
-                                </button>
-                                <button onClick={() => handleDeleteGoal(goal.id)}
-                                        className="delete-button">
-                                    <FaTrash/> Delete
-                                </button>
-                            </div>
-                        </li>
-                    ))}
-                </ul>
-            )}
-        </div>
-    );
+    const getBudgetStatusClass = (current, max) => {
+        if (current > max) return "status-exceeded";
+        const ratio = current / max;
+        if (ratio < 0.5) return "status-good";
+        if (ratio < 0.8) return "status-warning";
+        return "status-caution";
+    };
+
+    const BudgetCard = ({ budget }) => {
+        const progressColor = getProgressColor(budget.totalSpent, budget.amount);
+        const statusClass = getBudgetStatusClass(budget.totalSpent, budget.amount);
+
+        return (
+            <div className="budget-card eco-card">
+                <div className="budget-header">
+                    <h4 className="budget-category">{budget.categoryName || 'No category'}</h4>
+                    <div className="budget-actions">
+                        <button
+                            onClick={() => handleEditBudgetClick(budget)}
+                            className="action-button edit-button"
+                            aria-label="Edit budget"
+                        >
+                            <FaEdit />
+                        </button>
+                        <button
+                            onClick={() => handleDeleteBudget(budget.id)}
+                            className="action-button delete-button"
+                            aria-label="Delete budget"
+                        >
+                            <FaTrash />
+                        </button>
+                    </div>
+                </div>
+
+                <div className="budget-dates">
+                    <span className="date-label">From</span>
+                    <span className="date-value">{new Date(budget.startDate).toLocaleDateString()}</span>
+                    <span className="date-separator">-</span>
+                    <span className="date-label">To</span>
+                    <span className="date-value">{new Date(budget.endDate).toLocaleDateString()}</span>
+                </div>
+
+                <div className="budget-amount-container">
+                    <div className="budget-amount">
+                        <span className="amount-value">£{budget.amount}</span>
+                        <span className="amount-label">Budget</span>
+                    </div>
+                    <div className="budget-spent">
+                        <span className="spent-value">£{budget.totalSpent}</span>
+                        <span className="spent-label">Spent</span>
+                    </div>
+                    <div className="budget-remaining">
+                        <span className={`remaining-value ${budget.totalSpent > budget.amount ? 'negative' : 'positive'}`}>
+                            {budget.totalSpent > budget.amount ? '-' : ''}£{Math.abs(budget.amount - budget.totalSpent).toFixed(2)}
+                        </span>
+                        <span className="remaining-label">
+                            {budget.totalSpent > budget.amount ? 'Overspent' : 'Remaining'}
+                        </span>
+                    </div>
+                </div>
+
+                <div className="budget-progress">
+                    <div className="progress-container">
+                        <div
+                            className="progress-bar"
+                            style={{
+                                width: `${Math.min(100, (budget.totalSpent / budget.amount) * 100)}%`,
+                                backgroundColor: progressColor
+                            }}
+                        ></div>
+                    </div>
+                    <div className={`budget-status ${statusClass}`}>
+                        {budget.totalSpent > budget.amount
+                            ? 'Budget Exceeded'
+                            : `${Math.round((budget.totalSpent / budget.amount) * 100)}% Used`}
+                    </div>
+                </div>
+            </div>
+        );
+    };
+
+    const GoalCard = ({ goal }) => {
+        const progressColor = getProgressColor(goal.totalCarbonFootprint, goal.amount);
+        const statusClass = getBudgetStatusClass(goal.totalCarbonFootprint, goal.amount);
+
+        return (
+            <div className="goal-card eco-card">
+                <div className="goal-header">
+                    <div className="goal-title">
+                        <FaLeaf className="goal-icon" />
+                        <h4 className="goal-category">{goal.categoryName || 'No category'}</h4>
+                    </div>
+                    <div className="goal-actions">
+                        <button
+                            onClick={() => handleEditGoalClick(goal)}
+                            className="action-button edit-button"
+                            aria-label="Edit goal"
+                        >
+                            <FaEdit />
+                        </button>
+                        <button
+                            onClick={() => handleDeleteGoal(goal.id)}
+                            className="action-button delete-button"
+                            aria-label="Delete goal"
+                        >
+                            <FaTrash />
+                        </button>
+                    </div>
+                </div>
+
+                <div className="goal-dates">
+                    <span className="date-label">From</span>
+                    <span className="date-value">{new Date(goal.startDate).toLocaleDateString()}</span>
+                    <span className="date-separator">-</span>
+                    <span className="date-label">To</span>
+                    <span className="date-value">{new Date(goal.endDate).toLocaleDateString()}</span>
+                </div>
+
+                <div className="goal-amount-container">
+                    <div className="goal-amount">
+                        <span className="amount-value">{goal.amount}</span>
+                        <span className="amount-label">kg CO<sub>2</sub> Target</span>
+                    </div>
+                    <div className="goal-current">
+                        <span className="current-value">{goal.totalCarbonFootprint}</span>
+                        <span className="current-label">kg CO<sub>2</sub> Current</span>
+                    </div>
+                </div>
+
+                <div className="goal-progress">
+                    <div className="progress-container">
+                        <div
+                            className="progress-bar"
+                            style={{
+                                width: `${Math.min(100, (goal.totalCarbonFootprint / goal.amount) * 100)}%`,
+                                backgroundColor: progressColor
+                            }}
+                        ></div>
+                    </div>
+                    <div className={`goal-status ${statusClass}`}>
+                        {goal.totalCarbonFootprint > goal.amount
+                            ? 'Goal Exceeded'
+                            : `${Math.round((goal.totalCarbonFootprint / goal.amount) * 100)}% Used`}
+                    </div>
+                </div>
+            </div>
+        );
+    };
 
     return (
-        <div className="budget-container">
-            <div className="header">
-                <h2>Your Budget</h2>
-                <p>Manage your budgets effectively by setting limits for different categories and tracking your spending.</p>
+        <Container className="budget-container">
+            <div className="section-header text-center">
+                <h2 className="page-title">Budget & Goals</h2>
+                <p className="section-subtitle">
+                    Manage your spending limits and carbon footprint goals to stay on track with your financial and environmental targets.
+                </p>
             </div>
 
-            <button onClick={handleAddBudgetClick} className="add-budget-button">
-                Add Budget
-            </button>
-            <button onClick={handleAddGoalClick} className="add-goal-button">
-                Add Goal
-            </button>
-
-            <div className="filters">
-                <input
-                    type="text"
-                    placeholder="Search budgets..."
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    className="search-bar"
-                />
-                <select
-                    value={filterCategory}
-                    onChange={(e) => setFilterCategory(e.target.value)}
-                    className="filter-dropdown"
-                >
-                    <option value="">All Categories</option>
-                    {categories.map((category) => (
-                        <option key={category.id} value={category.id}>
-                            {category.name}
-                        </option>
-                    ))}
-                </select>
+            <div className="actions-bar">
+                <Row>
+                    <Col md={6} className="action-buttons mb-3 mb-md-0">
+                        <button onClick={handleAddBudgetClick} className="btn-eco-primary me-3">
+                            <FaPlus className="btn-icon" /> Add Budget
+                        </button>
+                        <button onClick={handleAddGoalClick} className="btn-eco-secondary">
+                            <FaLeaf className="btn-icon" /> Add Goal
+                        </button>
+                    </Col>
+                    <Col md={6}>
+                        <div className="filter-container">
+                            <div className="search-wrapper">
+                                <input
+                                    type="text"
+                                    placeholder="Search by category..."
+                                    value={searchQuery}
+                                    onChange={(e) => setSearchQuery(e.target.value)}
+                                    className="search-input"
+                                />
+                            </div>
+                            <select
+                                value={filterCategory}
+                                onChange={(e) => setFilterCategory(e.target.value)}
+                                className="filter-dropdown"
+                            >
+                                <option value="">All Categories</option>
+                                {categories.map((category) => (
+                                    <option key={category.id} value={category.id}>
+                                        {category.name}
+                                    </option>
+                                ))}
+                            </select>
+                        </div>
+                    </Col>
+                </Row>
             </div>
 
+            <div className="section-content">
+                <Row className="g-4">
+                    <Col lg={8}>
+                        <div className="budgets-section">
+                            <div className="section-header">
+                                <h3 className="section-title">
+                                    <FaChartLine className="section-icon" /> Your Current Budgets
+                                </h3>
+                            </div>
+
+                            {currentBudgets.length === 0 ? (
+                                <div className="empty-state">
+                                    <div className="empty-icon">💰</div>
+                                    <p>No current budgets found.</p>
+                                    <p className="empty-hint">Create a budget to start tracking your spending!</p>
+                                </div>
+                            ) : (
+                                <div className="budgets-grid">
+                                    {currentBudgets.map(budget => (
+                                        <BudgetCard key={budget.id} budget={budget} />
+                                    ))}
+                                </div>
+                            )}
+
+                            {pastBudgets.length > 0 && (
+                                <>
+                                    <div className="section-header mt-4">
+                                        <h3 className="section-title">Past Budgets</h3>
+                                    </div>
+                                    <div className="budgets-grid">
+                                        {pastBudgets.map(budget => (
+                                            <BudgetCard key={budget.id} budget={budget} />
+                                        ))}
+                                    </div>
+                                </>
+                            )}
+                        </div>
+                    </Col>
+
+                    <Col lg={4}>
+                        <div className="goals-section">
+                            <div className="section-header">
+                                <h3 className="section-title">
+                                    <FaLeaf className="section-icon" /> Carbon Footprint Goals
+                                </h3>
+                            </div>
+
+                            {filteredGoals.length === 0 ? (
+                                <div className="empty-state">
+                                    <div className="empty-icon">🌱</div>
+                                    <p>No carbon footprint goals found.</p>
+                                    <p className="empty-hint">Set a goal to track your environmental impact!</p>
+                                </div>
+                            ) : (
+                                <div className="goals-list">
+                                    {filteredGoals.map(goal => (
+                                        <GoalCard key={goal.id} goal={goal} />
+                                    ))}
+                                </div>
+                            )}
+                        </div>
+                    </Col>
+                </Row>
+            </div>
+
+            {/* Budget Popup */}
             {isBudgetPopupVisible && (
-                <div className="popup">
-                    <div className="popup-card">
-                        <h3 className="popup-title">{isEditMode ? 'Edit Budget' : 'Add a Budget'}</h3>
-                        <form className="popup-form">
-                            <input
-                                type="number"
-                                placeholder="Amount"
-                                value={newBudget.amount}
-                                onChange={(e) => setNewBudget({ ...newBudget, amount: e.target.value })}
-                                className="input-field"
-                            />
-
-                            <input
-                                type="date"
-                                placeholder="Start Date"
-                                value={newBudget.startDate}
-                                onChange={(e) => setNewBudget({ ...newBudget, startDate: e.target.value })}
-                                className="input-field"
-                            />
-
-                            <input
-                                type="date"
-                                placeholder="End Date"
-                                value={newBudget.endDate}
-                                onChange={(e) => setNewBudget({ ...newBudget, endDate: e.target.value })}
-                                className="input-field"
-                            />
-
-                            <select
-                                value={newBudget.category ? newBudget.category.id : ''}
-                                onChange={(e) => {
-                                    const selectedCategory = categories.find(
-                                        (cat) => cat.id === parseInt(e.target.value)
-                                    );
-                                    setNewBudget({ ...newBudget, category: selectedCategory });
-                                }}
-                                className="input-field"
+                <div className="popup-overlay">
+                    <div className="popup-container eco-card">
+                        <div className="popup-header">
+                            <h3>{isEditMode ? 'Edit Budget' : 'Create a New Budget'}</h3>
+                            <button
+                                className="close-button"
+                                onClick={handleClosePopup}
+                                aria-label="Close popup"
                             >
-                                <option value="" disabled>
-                                    Select a category
-                                </option>
-                                {categories.map((category) => (
-                                    <option key={category.id} value={category.id}>
-                                        {category.name}
-                                    </option>
-                                ))}
-                            </select>
+                                ×
+                            </button>
+                        </div>
+                        <div className="popup-body">
+                            {alertMessage && <Alert variant="danger">{alertMessage}</Alert>}
 
-                            <div className="popup-buttons">
-                                <button type="button" onClick={handleAddOrEditBudget} className="submit-button">
-                                    {isEditMode ? 'Save Changes' : 'Add Budget'}
-                                </button>
-                                <button type="button" onClick={handleClosePopup} className="cancel-button">
-                                    Cancel
-                                </button>
-                            </div>
+                            <Form>
+                                <Form.Group className="mb-3">
+                                    <Form.Label>Budget Amount (£)</Form.Label>
+                                    <Form.Control
+                                        type="number"
+                                        min="0"
+                                        step="0.01"
+                                        value={newBudget.amount}
+                                        onChange={(e) => setNewBudget({ ...newBudget, amount: e.target.value })}
+                                        placeholder="Enter budget amount"
+                                    />
+                                </Form.Group>
 
-                            {alertMessage && <div className="alert">{alertMessage}</div>}
-                        </form>
+                                <Form.Group className="mb-3">
+                                    <Form.Label>Category</Form.Label>
+                                    <Form.Select
+                                        value={newBudget.category ? newBudget.category.id : ''}
+                                        onChange={(e) => {
+                                            const selectedCategory = categories.find(
+                                                (cat) => cat.id === parseInt(e.target.value)
+                                            );
+                                            setNewBudget({ ...newBudget, category: selectedCategory });
+                                        }}
+                                    >
+                                        <option value="" disabled>
+                                            Select a category
+                                        </option>
+                                        {categories.map((category) => (
+                                            <option key={category.id} value={category.id}>
+                                                {category.name}
+                                            </option>
+                                        ))}
+                                    </Form.Select>
+                                </Form.Group>
+
+                                <Row>
+                                    <Col sm={6}>
+                                        <Form.Group className="mb-3">
+                                            <Form.Label>Start Date</Form.Label>
+                                            <Form.Control
+                                                type="date"
+                                                value={newBudget.startDate}
+                                                onChange={(e) => setNewBudget({ ...newBudget, startDate: e.target.value })}
+                                            />
+                                        </Form.Group>
+                                    </Col>
+                                    <Col sm={6}>
+                                        <Form.Group className="mb-3">
+                                            <Form.Label>End Date</Form.Label>
+                                            <Form.Control
+                                                type="date"
+                                                value={newBudget.endDate}
+                                                onChange={(e) => setNewBudget({ ...newBudget, endDate: e.target.value })}
+                                            />
+                                        </Form.Group>
+                                    </Col>
+                                </Row>
+
+                                <div className="popup-actions">
+                                    <button
+                                        type="button"
+                                        onClick={handleAddOrEditBudget}
+                                        className="btn-eco-primary"
+                                    >
+                                        {isEditMode ? 'Save Changes' : 'Create Budget'}
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={handleClosePopup}
+                                        className="btn-eco-secondary"
+                                    >
+                                        Cancel
+                                    </button>
+                                </div>
+                            </Form>
+                        </div>
                     </div>
                 </div>
             )}
 
+            {/* Goal Popup */}
             {isGoalPopupVisible && (
-                <div className="popup">
-                    <div className="popup-card">
-                        <h3 className="popup-title">{isEditMode ? 'Edit Goal' : 'Add a Goal'}</h3>
-                        <form className="popup-form">
-                            <input
-                                type="number"
-                                placeholder="Carbon Footprint Goal (kg CO2)"
-                                value={newGoal.amount}
-                                onChange={(e) => setNewGoal({ ...newGoal, amount: e.target.value })}
-                                className="input-field"
-                            />
-
-                            <input
-                                type="date"
-                                placeholder="Start Date"
-                                value={newGoal.startDate}
-                                onChange={(e) => setNewGoal({ ...newGoal, startDate: e.target.value })}
-                                className="input-field"
-                            />
-
-                            <input
-                                type="date"
-                                placeholder="End Date"
-                                value={newGoal.endDate}
-                                onChange={(e) => setNewGoal({ ...newGoal, endDate: e.target.value })}
-                                className="input-field"
-                            />
-
-                            <select
-                                value={newGoal.category ? newGoal.category.id : ''}
-                                onChange={(e) => {
-                                    const selectedCategory = categories.find(
-                                        (cat) => cat.id === parseInt(e.target.value)
-                                    );
-                                    setNewGoal({ ...newGoal, category: selectedCategory });
-                                }}
-                                className="input-field"
+                <div className="popup-overlay">
+                    <div className="popup-container eco-card">
+                        <div className="popup-header">
+                            <h3>{isEditMode ? 'Edit Carbon Goal' : 'Create a New Carbon Goal'}</h3>
+                            <button
+                                className="close-button"
+                                onClick={handleClosePopup}
+                                aria-label="Close popup"
                             >
-                                <option value="" disabled>
-                                    Select a category
-                                </option>
-                                {categories.map((category) => (
-                                    <option key={category.id} value={category.id}>
-                                        {category.name}
-                                    </option>
-                                ))}
-                            </select>
+                                ×
+                            </button>
+                        </div>
+                        <div className="popup-body">
+                            {alertMessage && <Alert variant="danger">{alertMessage}</Alert>}
 
-                            <div className="popup-buttons">
-                                <button type="button" onClick={handleAddOrEditGoal} className="submit-button">
-                                    {isEditMode ? 'Save Changes' : 'Add Goal'}
-                                </button>
-                                <button type="button" onClick={handleClosePopup} className="cancel-button">
-                                    Cancel
-                                </button>
-                            </div>
+                            <Form>
+                                <Form.Group className="mb-3">
+                                    <Form.Label>Carbon Footprint Target (kg CO<sub>2</sub>)</Form.Label>
+                                    <Form.Control
+                                        type="number"
+                                        min="0"
+                                        step="0.01"
+                                        value={newGoal.amount}
+                                        onChange={(e) => setNewGoal({ ...newGoal, amount: e.target.value })}
+                                        placeholder="Enter carbon footprint target"
+                                    />
+                                </Form.Group>
 
-                            {alertMessage && <div className="alert">{alertMessage}</div>}
-                        </form>
+                                <Form.Group className="mb-3">
+                                    <Form.Label>Category</Form.Label>
+                                    <Form.Select
+                                        value={newGoal.category ? newGoal.category.id : ''}
+                                        onChange={(e) => {
+                                            const selectedCategory = categories.find(
+                                                (cat) => cat.id === parseInt(e.target.value)
+                                            );
+                                            setNewGoal({ ...newGoal, category: selectedCategory });
+                                        }}
+                                    >
+                                        <option value="" disabled>
+                                            Select a category
+                                        </option>
+                                        {categories.map((category) => (
+                                            <option key={category.id} value={category.id}>
+                                                {category.name}
+                                            </option>
+                                        ))}
+                                    </Form.Select>
+                                </Form.Group>
+
+                                <Row>
+                                    <Col sm={6}>
+                                        <Form.Group className="mb-3">
+                                            <Form.Label>Start Date</Form.Label>
+                                            <Form.Control
+                                                type="date"
+                                                value={newGoal.startDate}
+                                                onChange={(e) => setNewGoal({ ...newGoal, startDate: e.target.value })}
+                                            />
+                                        </Form.Group>
+                                    </Col>
+                                    <Col sm={6}>
+                                        <Form.Group className="mb-3">
+                                            <Form.Label>End Date</Form.Label>
+                                            <Form.Control
+                                                type="date"
+                                                value={newGoal.endDate}
+                                                onChange={(e) => setNewGoal({ ...newGoal, endDate: e.target.value })}
+                                            />
+                                        </Form.Group>
+                                    </Col>
+                                </Row>
+
+                                <div className="popup-actions">
+                                    <button
+                                        type="button"
+                                        onClick={handleAddOrEditGoal}
+                                        className="btn-eco-primary"
+                                    >
+                                        {isEditMode ? 'Save Changes' : 'Create Goal'}
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={handleClosePopup}
+                                        className="btn-eco-secondary"
+                                    >
+                                        Cancel
+                                    </button>
+                                </div>
+                            </Form>
+                        </div>
                     </div>
                 </div>
             )}
-
-            <div className="budget-goal-container">
-                <div className="goals-section">
-                    <GoalList title="Your Current Goals" goals={filteredGoals} />
-                </div>
-                <div className="budgets-section">
-                    <BudgetList title="Your Current Budgets" budgets={currentBudgets} />
-                    <BudgetList title="Past Budgets" budgets={pastBudgets} />
-                </div>
-            </div>
-        </div>
+        </Container>
     );
 };
 
