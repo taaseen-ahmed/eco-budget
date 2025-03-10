@@ -50,10 +50,7 @@ public class TransactionService {
         Double carbonMultiplierUsed = null;
         if (transactionDTO.getDescription() != null && !transactionDTO.getDescription().isBlank()) {
             // Get ChatGPT-derived carbon multiplier based on description
-            carbonMultiplierUsed = chatGPTService.getCarbonMultiplier(
-                    transactionDTO.getCategory().getName(),
-                    transactionDTO.getDescription()
-            );
+            carbonMultiplierUsed = getCarbonMultiplier(transactionDTO.getCategory().getName(), transactionDTO.getDescription());
         }
 
         // Apply carbon footprint based on multiplier or default category multiplier
@@ -141,10 +138,7 @@ public class TransactionService {
         Double carbonMultiplierUsed = existingTransaction.getCarbonMultiplierUsed();
         if (descriptionChanged) {
             // Get ChatGPT-derived carbon multiplier based on new description
-            carbonMultiplierUsed = chatGPTService.getCarbonMultiplier(
-                    existingTransaction.getCategory().getName(),
-                    transactionDTO.getDescription()
-            );
+            carbonMultiplierUsed = getCarbonMultiplier(existingTransaction.getCategory().getName(), transactionDTO.getDescription());
             existingTransaction.setChatGPTDerivedCarbonFootprint(true);
         }
 
@@ -230,5 +224,20 @@ public class TransactionService {
                 .isChatGPTDerivedCarbonFootprint(transaction.isChatGPTDerivedCarbonFootprint())
                 .carbonMultiplierUsed(carbonMultiplierUsed)
                 .build();
+    }
+
+    // Create a prompt for carbon multiplier
+    private String createCarbonMultiplierPrompt(String categoryName, String description) {
+        if (description == null || description.isBlank()) {
+            return String.format("Provide a single numeric carbon footprint multiplier in kilograms of CO2 per dollar spent for a transaction in the '%s' category. Only provide the numeric multiplier.", categoryName);
+        } else {
+            return String.format("Provide a single numeric carbon footprint multiplier in kilograms of CO2 per dollar spent for a transaction in the '%s' category. This is a description of the transaction: %s. Only provide the numeric multiplier.", categoryName, description);
+        }
+    }
+
+    // Get carbon multiplier from ChatGPTService
+    public Double getCarbonMultiplier(String categoryName, String description) {
+        String prompt = createCarbonMultiplierPrompt(categoryName, description);
+        return chatGPTService.getCarbonMultiplier(prompt);
     }
 }

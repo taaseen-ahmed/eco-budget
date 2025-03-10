@@ -38,7 +38,7 @@ public class CategoryService {
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
         // Request carbon multiplier from ChatGPT
-        Double carbonMultiplier = chatGPTService.getCarbonMultiplier(categoryName, null);
+        Double carbonMultiplier = getCarbonMultiplier(categoryName);
 
         Category category = new Category();
         category.setName(categoryName);
@@ -55,5 +55,16 @@ public class CategoryService {
     public Category getCategoryById(Long categoryId) {
         return categoryRepository.findById(categoryId)
                 .orElseThrow(() -> new RuntimeException("Category not found"));
+    }
+
+    // Create a prompt for carbon multiplier
+    private String createCarbonMultiplierPrompt(String categoryName) {
+        return String.format("Provide a single numeric carbon footprint multiplier in kilograms of CO2 per dollar spent for a transaction in the '%s' category. Only provide the numeric multiplier.", categoryName);
+    }
+
+    // Get carbon multiplier from ChatGPTService
+    public Double getCarbonMultiplier(String categoryName) {
+        String prompt = createCarbonMultiplierPrompt(categoryName);
+        return chatGPTService.getCarbonMultiplier(prompt);
     }
 }
