@@ -20,8 +20,7 @@ deploy:
   script:
     - echo "Starting deployment on EC2..."
     - cd /home/gitlab-runner/
-    - chmod +x ./deploy.sh
-    - sudo ./deploy.sh
+    - ./deploy.sh
   after_script:
     - echo "Deployment completed. Check logs for details."
     - docker-compose logs frontend | tail -n 50
