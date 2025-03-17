@@ -20,11 +20,19 @@ FROM nginx:alpine
 # Copy the build folder from the previous stage
 COPY --from=build /app/build /usr/share/nginx/html
 
-# Copy the nginx configuration
-COPY nginx.conf /etc/nginx/conf.d/default.conf
+# Copy the nginx configuration - we'll use it as template
+COPY nginx.conf /etc/nginx/conf.d/default.conf.template
 
-# Expose the port the frontend will run on
-EXPOSE 80
+# Create an entrypoint script to handle SSL certificates
+RUN echo '#!/bin/sh \n\
+envsubst < /etc/nginx/conf.d/default.conf.template > /etc/nginx/conf.d/default.conf \n\
+exec "$@"' > /docker-entrypoint.sh && \
+chmod +x /docker-entrypoint.sh
 
-# Start Nginx to serve the React application
+# Expose the ports
+EXPOSE 80 443
+
+# Start Nginx with our entrypoint script
+ENTRYPOINT ["/docker-entrypoint.sh"]
+
 CMD ["nginx", "-g", "daemon off;"]
