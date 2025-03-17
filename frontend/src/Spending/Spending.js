@@ -44,6 +44,7 @@ const Spending = () => {
         description: ''
     });
     const [newCategory, setNewCategory] = useState('');
+    const [isSubmitting, setIsSubmitting] = useState(false);
 
     // State - UI controls
     const [isPopupVisible, setPopupVisible] = useState(false);
@@ -187,6 +188,8 @@ const Spending = () => {
             return;
         }
 
+        setIsSubmitting(true);
+
         try {
             const token = localStorage.getItem(TOKEN_KEY);
             const transactionToSend = {
@@ -213,6 +216,8 @@ const Spending = () => {
         } catch (error) {
             console.error('Error adding/updating transaction:', error);
             alert('Failed to add/update transaction. Please try again.');
+        } finally {
+            setIsSubmitting(false); // Reset loading state regardless of outcome
         }
     };
 
@@ -1004,15 +1009,15 @@ const Spending = () => {
                                     type="button"
                                     onClick={handleAddTransaction}
                                     className="btn-eco-primary"
+                                    disabled={isSubmitting}
                                 >
-                                    {newTransaction.id ? 'Save Changes' : 'Add Transaction'}
-                                </button>
-                                <button
-                                    type="button"
-                                    onClick={() => setPopupVisible(false)}
-                                    className="btn-eco-secondary"
-                                >
-                                    Cancel
+                                    {isSubmitting ? (
+                                        <span className="spinner-container">
+                                            <span className="spinner"></span>
+                                        </span>
+                                    ) : (
+                                        newTransaction.id ? 'Save Changes' : 'Add Transaction'
+                                    )}
                                 </button>
                             </div>
                         </form>
