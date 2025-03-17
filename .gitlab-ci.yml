@@ -23,8 +23,9 @@ deploy:
     - ./deploy.sh
   after_script:
     - echo "Deployment completed. Check logs for details."
-    - docker-compose logs frontend | tail -n 50
-    - docker-compose logs backend | tail -n 50
+    - docker-compose ps
+    - docker-compose logs frontend | tail -n 20
+    - docker-compose logs backend | tail -n 20
   environment:
     name: production
     url: https://eco-budget.co.uk
