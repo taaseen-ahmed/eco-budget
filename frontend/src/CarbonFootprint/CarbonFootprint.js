@@ -63,7 +63,7 @@ const CarbonFootprint = () => {
             console.error('Error fetching transactions:', error);
             alert('Failed to fetch transactions. Please try again.');
         }
-    }, []);
+    }, [API_ENDPOINTS.transactions]);
 
     /**
      * Fetches categories from API
@@ -79,7 +79,7 @@ const CarbonFootprint = () => {
             console.error('Error fetching categories:', error);
             alert('Failed to fetch categories. Please try again.');
         }
-    }, []);
+    }, [API_ENDPOINTS.categories]);
 
     /**
      * Fetches carbon footprint recommendations from API
@@ -98,7 +98,7 @@ const CarbonFootprint = () => {
         } finally {
             setLoadingRecommendations(false);
         }
-    }, []);
+    }, [API_ENDPOINTS.recommendations]);
 
     /**
      * Fetches carbon footprint benchmarks from API
@@ -117,7 +117,7 @@ const CarbonFootprint = () => {
         } finally {
             setLoadingBenchmarks(false);
         }
-    }, []);
+    }, [API_ENDPOINTS.benchmarks]);
 
     /**
      * Filters transactions based on selected period and category
