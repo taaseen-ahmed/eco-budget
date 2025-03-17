@@ -18,6 +18,14 @@ deploy:
   tags:
     - ec2-runner
   script:
-    - pwd
+    - echo "Starting deployment on EC2..."
     - cd /home/gitlab-runner/
-    - ./deploy.sh
+    - chmod +x ./deploy.sh
+    - sudo ./deploy.sh
+  after_script:
+    - echo "Deployment completed. Check logs for details."
+    - docker-compose logs frontend | tail -n 50
+    - docker-compose logs backend | tail -n 50
+  environment:
+    name: production
+    url: https://eco-budget.co.uk
