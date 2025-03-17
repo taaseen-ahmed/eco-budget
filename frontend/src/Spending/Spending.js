@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { FaFilter, FaEdit, FaTrash } from 'react-icons/fa';
 import axios from 'axios';
-import { Line, Pie } from 'react-chartjs-2';
+import { Line, Doughnut } from 'react-chartjs-2';
 import {
     Chart as ChartJS, CategoryScale, LinearScale, PointElement,
     LineElement, Title, Tooltip, Legend, ArcElement
@@ -439,12 +439,16 @@ const Spending = () => {
         const labels = Object.keys(categoryTotals);
         const data = Object.values(categoryTotals);
 
-        // Return data formatted for Chart.js
+        // Return data formatted for Chart.js with updated color scheme
         return {
             labels,
             datasets: [{
                 data,
-                backgroundColor: labels.map((_, index) => `hsl(${index * 360 / labels.length}, 70%, 50%)`),
+                backgroundColor: labels.map((_, index) => {
+                    const hue = (index * 137) % 360; // Golden ratio for nice color distribution
+                    return `hsl(${hue}, 70%, 60%)`;
+                }),
+                borderWidth: 1
             }],
         };
     };
@@ -589,14 +593,29 @@ const Spending = () => {
                 },
             }
         },
-        pie: {
+        doughnut: {
             data: spendingDistributionData,
             options: {
                 maintainAspectRatio: false,
                 responsive: true,
+                cutout: '60%', // Create doughnut hole
                 plugins: {
                     legend: {
-                        display: false
+                        position: 'right',
+                        labels: {
+                            boxWidth: 15,
+                            padding: 10
+                        }
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                const value = context.raw.toFixed(2);
+                                const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                const percentage = ((context.raw / total) * 100).toFixed(1);
+                                return `£${value} (${percentage}%)`;
+                            }
+                        }
                     }
                 }
             }
@@ -765,24 +784,11 @@ const Spending = () => {
                 {/* Distribution chart */}
                 <div className="distribution-chart eco-card">
                     <h3 className="chart-title">Your Spending Distribution</h3>
-                    <div className="chart-and-labels">
-                        <div className="pie-chart-container">
-                            <Pie
-                                data={chartConfig.pie.data}
-                                options={chartConfig.pie.options}
-                            />
-                        </div>
-                        <div className="category-legend">
-                            {spendingDistributionData.labels.map((label, index) => (
-                                <div key={index} className="legend-item">
-                                    <div
-                                        className="color-indicator"
-                                        style={{ backgroundColor: spendingDistributionData.datasets[0].backgroundColor[index] }}
-                                    ></div>
-                                    <span className="legend-label">{label}</span>
-                                </div>
-                            ))}
-                        </div>
+                    <div className="doughnut-chart-container">
+                        <Doughnut
+                            data={chartConfig.doughnut.data}
+                            options={chartConfig.doughnut.options}
+                        />
                     </div>
                 </div>
 

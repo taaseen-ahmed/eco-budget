@@ -2,7 +2,7 @@ import React, { useCallback, useState, useEffect } from 'react';
 import { Row, Col, Container } from 'react-bootstrap';
 import { FaFilter, FaLeaf, FaSeedling } from 'react-icons/fa';
 import axios from 'axios';
-import { Line, Pie } from 'react-chartjs-2';
+import { Line, Doughnut } from 'react-chartjs-2';
 import {
     Chart as ChartJS, CategoryScale, LinearScale, PointElement,
     LineElement, BarElement, Title, Tooltip, Legend, TimeScale
@@ -393,14 +393,19 @@ const CarbonFootprint = () => {
             }
         },
         // Pie chart for carbon footprint distribution by category
-        pie: {
+        doughnut: {
             data: carbonFootprintDistributionData,
             options: {
                 maintainAspectRatio: false,
                 responsive: true,
+                cutout: '60%', // Create doughnut hole
                 plugins: {
                     legend: {
-                        display: false
+                        position: 'right',
+                        labels: {
+                            boxWidth: 15,
+                            padding: 10
+                        }
                     },
                     tooltip: {
                         callbacks: {
@@ -465,25 +470,11 @@ const CarbonFootprint = () => {
         <Col lg={4}>
             <div className="distribution-chart eco-card">
                 <h3 className="chart-title">Carbon Footprint by Category</h3>
-                <div className="pie-chart-container">
-                    <Pie
-                        data={chartConfig.pie.data}
-                        options={chartConfig.pie.options}
+                <div className="doughnut-chart-container">
+                    <Doughnut
+                        data={chartConfig.doughnut.data}
+                        options={chartConfig.doughnut.options}
                     />
-                </div>
-                <div className="category-legend">
-                    {carbonFootprintDistributionData.labels.map((label, index) => (
-                        <div key={index} className="legend-item">
-                            <div
-                                className="color-indicator"
-                                style={{ backgroundColor: carbonFootprintDistributionData.datasets[0].backgroundColor[index] }}
-                            ></div>
-                            <span className="legend-label">{label}</span>
-                            <span className="legend-value">
-                {carbonFootprintDistributionData.datasets[0].data[index].toFixed(1)} kg
-              </span>
-                        </div>
-                    ))}
                 </div>
             </div>
         </Col>
