@@ -51,19 +51,34 @@ const Spending = () => {
     const [isCategoryPopupVisible, setCategoryPopupVisible] = useState(false);
     const [isFilterPopupVisible, setFilterPopupVisible] = useState(false);
 
-    // State - Filters and sorting
+    // State - Current active filters
+    const [activeFilters, setActiveFilters] = useState({
+        searchQuery: '',
+        filterType: '',
+        filterCategory: '',
+        selectedPeriod: 'currentMonth',
+        selectedCategory: 'All',
+        customStartDate: '',
+        customEndDate: '',
+        sortOption: 'dateDesc',
+        comparePreviousMonth: false
+    });
+
+    // State - Form values for filters (not applied until button click)
+    const [filterForm, setFilterForm] = useState({
+        filterType: '',
+        filterCategory: '',
+        selectedPeriod: 'currentMonth',
+        customStartDate: '',
+        customEndDate: '',
+        sortOption: 'dateDesc'
+    });
+
+    // State - Search query (applied immediately for better UX)
     const [searchQuery, setSearchQuery] = useState('');
-    const [filterType, setFilterType] = useState('');
-    const [filterCategory, setFilterCategory] = useState('');
-    const [selectedPeriod, setSelectedPeriod] = useState('currentMonth');
-    const [selectedCategory] = useState('All');
-    const [customStartDate, setCustomStartDate] = useState('');
-    const [customEndDate, setCustomEndDate] = useState('');
-    const [sortOption, setSortOption] = useState('dateDesc');
 
     // State - Charts and data visualization
     const [cumulativeData, setCumulativeData] = useState([]);
-    const [comparePreviousMonth, setComparePreviousMonth] = useState(false);
     const [previousMonthData, setPreviousMonthData] = useState([]);
     const [recommendations, setRecommendations] = useState([]);
 
@@ -331,14 +346,81 @@ const Spending = () => {
     }, []);
 
     /**
+     * Handles changes to filter form fields
+     * @param {Object} e - Change event object
+     */
+    const handleFilterChange = (e) => {
+        const { name, value } = e.target;
+        setFilterForm(prevState => ({ ...prevState, [name]: value }));
+    };
+
+    /**
+     * Handles changes to the comparison toggle
+     * @param {boolean} checked - Toggle state
+     */
+    const handleComparisonToggle = (checked) => {
+        setActiveFilters(prev => ({
+            ...prev,
+            comparePreviousMonth: checked
+        }));
+    };
+
+    /**
+     * Applies filter settings from form to active filters
+     */
+    const applyFilters = () => {
+        setActiveFilters(prev => ({
+            ...prev,
+            ...filterForm,
+            searchQuery // Include current search query
+        }));
+        setFilterPopupVisible(false);
+    };
+
+    /**
+     * Resets all filters to default values
+     */
+    const resetFilters = () => {
+        const defaultFilters = {
+            filterType: '',
+            filterCategory: '',
+            selectedPeriod: 'currentMonth',
+            customStartDate: '',
+            customEndDate: '',
+            sortOption: 'dateDesc'
+        };
+
+        setFilterForm(defaultFilters);
+        setActiveFilters(prev => ({
+            ...prev,
+            ...defaultFilters
+        }));
+    };
+
+    // Update search query in active filters when it changes
+    useEffect(() => {
+        setActiveFilters(prev => ({
+            ...prev,
+            searchQuery
+        }));
+    }, [searchQuery]);
+
+    /**
      * Calculates cumulative spending data for charts
      * @param {Array} transactions - Transactions to process
      * @param {string} period - Time period to filter by
      * @param {string} customStartDate - Custom start date (optional)
      * @param {string} customEndDate - Custom end date (optional)
      */
-    const calculateCumulativeData = useCallback((transactions, period, customStartDate, customEndDate) => {
-        if (period === 'currentMonth' && comparePreviousMonth) {
+    const calculateCumulativeData = useCallback((
+        transactions,
+        period,
+        customStartDate,
+        customEndDate,
+        compareMode,
+        filterCategory
+    ) => {
+        if (period === 'currentMonth' && compareMode) {
             // For month comparison mode
 
             // Calculate current month data
@@ -410,14 +492,16 @@ const Spending = () => {
             setCumulativeData(cumulative);
             setPreviousMonthData([]);
         }
-    }, [filterTransactionsByPeriod, filterCategory, comparePreviousMonth]);
+    }, [filterTransactionsByPeriod]);
 
     /**
      * Calculates spending distribution by category for pie chart
      * @param {Array} transactions - Transactions to analyze
      * @returns {Object} Chart data for the pie chart
      */
-    const calculateSpendingDistribution = (transactions) => {
+    const calculateSpendingDistribution = (transactions, filters) => {
+        const { selectedPeriod, selectedCategory, customStartDate, customEndDate } = filters;
+
         // Filter transactions by period and category
         const filteredTransactions = filterTransactionsByPeriod(
             transactions,
@@ -457,6 +541,15 @@ const Spending = () => {
      * Shows the filter popup
      */
     const handleFilterButtonClick = () => {
+        // Set the filter form values to match current active filters
+        setFilterForm({
+            filterType: activeFilters.filterType,
+            filterCategory: activeFilters.filterCategory,
+            selectedPeriod: activeFilters.selectedPeriod,
+            customStartDate: activeFilters.customStartDate,
+            customEndDate: activeFilters.customEndDate,
+            sortOption: activeFilters.sortOption
+        });
         setFilterPopupVisible(true);
     };
 
@@ -465,21 +558,41 @@ const Spending = () => {
         fetchData();
     }, [fetchData]);
 
-    // Process data when transactions or time frame changes
+    // Process data when active filters or transactions change
     useEffect(() => {
-        calculateCumulativeData(transactions, selectedPeriod, customStartDate, customEndDate);
+        const {
+            selectedPeriod,
+            customStartDate,
+            customEndDate,
+            comparePreviousMonth,
+            filterCategory
+        } = activeFilters;
+
+        calculateCumulativeData(
+            transactions,
+            selectedPeriod,
+            customStartDate,
+            customEndDate,
+            comparePreviousMonth,
+            filterCategory
+        );
     }, [
         transactions,
-        selectedPeriod,
-        selectedCategory,
-        customStartDate,
-        customEndDate,
-        comparePreviousMonth,
+        activeFilters,
         calculateCumulativeData
     ]);
 
-    // Filter transactions based on search query and filters
+    // Filter transactions based on active filters
     const filteredTransactions = transactions.filter((transaction) => {
+        const {
+            searchQuery,
+            filterType,
+            filterCategory,
+            selectedPeriod,
+            customStartDate,
+            customEndDate
+        } = activeFilters;
+
         const matchesSearchQuery =
             transaction.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
             transaction.amount.toString().includes(searchQuery) ||
@@ -504,7 +617,7 @@ const Spending = () => {
 
     // Sort filtered transactions based on selected sort option
     const sortedTransactions = filteredTransactions.sort((a, b) => {
-        switch (sortOption) {
+        switch (activeFilters.sortOption) {
             case 'dateAsc':
                 return new Date(a.date) - new Date(b.date);
             case 'amountAsc':
@@ -524,28 +637,33 @@ const Spending = () => {
     // Calculate metrics and prepare chart data
     const currentBalance = calculateBalance();
     const balanceClass = currentBalance < 0 ? 'negative-balance' : 'positive-balance';
-    const filteredTransactionsByPeriod = filterTransactionsByPeriod(transactions, selectedPeriod);
+    const filteredTransactionsByPeriod = filterTransactionsByPeriod(
+        transactions,
+        activeFilters.selectedPeriod,
+        activeFilters.customStartDate,
+        activeFilters.customEndDate
+    );
     const totalExpense = calculateTotalExpense(filteredTransactionsByPeriod);
-    const spendingDistributionData = calculateSpendingDistribution(transactions);
+    const spendingDistributionData = calculateSpendingDistribution(transactions, activeFilters);
 
     // Chart configurations
     const chartConfig = {
         line: {
             data: {
-                labels: comparePreviousMonth
+                labels: activeFilters.comparePreviousMonth
                     ? Array.from({ length: 31 }, (_, i) => i + 1)
                     : cumulativeData.map(data => new Date(data.date).toLocaleDateString()),
                 datasets: [
                     {
-                        label: comparePreviousMonth ? 'Current Month Spending' : 'Cumulative Spending (£)',
-                        data: comparePreviousMonth
+                        label: activeFilters.comparePreviousMonth ? 'Current Month Spending' : 'Cumulative Spending (£)',
+                        data: activeFilters.comparePreviousMonth
                             ? cumulativeData.map(data => ({ x: data.day, y: data.cumulativeSum, amount: data.amount }))
                             : cumulativeData.map(data => data.cumulativeSum),
                         fill: false,
                         backgroundColor: 'rgba(75,192,192,0.4)',
                         borderColor: 'rgba(75,192,192,1)',
                     },
-                    comparePreviousMonth && {
+                    activeFilters.comparePreviousMonth && {
                         label: 'Previous Month Spending',
                         data: previousMonthData.map(data => ({ x: data.day, y: data.cumulativeSum, amount: data.amount })),
                         fill: false,
@@ -561,7 +679,7 @@ const Spending = () => {
                     tooltip: {
                         callbacks: {
                             label: function(context) {
-                                if (comparePreviousMonth) {
+                                if (activeFilters.comparePreviousMonth) {
                                     const amount = (context.raw.amount || 0).toFixed(2);
                                     const cumulative = (context.raw.y || 0).toFixed(2);
                                     return `Daily: £${amount}\nCumulative: £${cumulative}`;
@@ -572,7 +690,7 @@ const Spending = () => {
                     }
                 },
                 scales: {
-                    x: comparePreviousMonth ? {
+                    x: activeFilters.comparePreviousMonth ? {
                         type: 'linear',
                         title: {
                             display: true,
@@ -751,13 +869,13 @@ const Spending = () => {
                         <span className="balance-value">£{currentBalance}</span>
                     </div>
 
-                    {selectedPeriod === 'currentMonth' && (
+                    {activeFilters.selectedPeriod === 'currentMonth' && (
                         <div className="comparison-toggle">
                             <label className="toggle-switch">
                                 <input
                                     type="checkbox"
-                                    checked={comparePreviousMonth}
-                                    onChange={() => setComparePreviousMonth(!comparePreviousMonth)}
+                                    checked={activeFilters.comparePreviousMonth}
+                                    onChange={(e) => handleComparisonToggle(e.target.checked)}
                                 />
                                 <span className="toggle-slider"></span>
                             </label>
@@ -1037,10 +1155,6 @@ const Spending = () => {
      * Renders the filter popup
      * @returns {JSX.Element|null} - Filter popup or null if not visible
      */
-    /**
-     * Renders the filter popup
-     * @returns {JSX.Element|null} - Filter popup or null if not visible
-     */
     const renderFilterPopup = () => {
         if (!isFilterPopupVisible) return null;
 
@@ -1063,8 +1177,9 @@ const Spending = () => {
                                 <label htmlFor="filterType">Transaction Type</label>
                                 <select
                                     id="filterType"
-                                    value={filterType}
-                                    onChange={(e) => setFilterType(e.target.value)}
+                                    name="filterType"
+                                    value={filterForm.filterType}
+                                    onChange={handleFilterChange}
                                     className="form-control"
                                 >
                                     <option value="">All Types</option>
@@ -1080,8 +1195,9 @@ const Spending = () => {
                                 <label htmlFor="filterCategory">Category</label>
                                 <select
                                     id="filterCategory"
-                                    value={filterCategory}
-                                    onChange={(e) => setFilterCategory(e.target.value)}
+                                    name="filterCategory"
+                                    value={filterForm.filterCategory}
+                                    onChange={handleFilterChange}
                                     className="form-control"
                                 >
                                     <option value="">All Categories</option>
@@ -1097,8 +1213,9 @@ const Spending = () => {
                                 <label htmlFor="selectedPeriod">Time Period</label>
                                 <select
                                     id="selectedPeriod"
-                                    value={selectedPeriod}
-                                    onChange={(e) => setSelectedPeriod(e.target.value)}
+                                    name="selectedPeriod"
+                                    value={filterForm.selectedPeriod}
+                                    onChange={handleFilterChange}
                                     className="form-control"
                                 >
                                     <option value="currentMonth">Current Month</option>
@@ -1108,7 +1225,7 @@ const Spending = () => {
                                 </select>
                             </div>
 
-                            {selectedPeriod === 'custom' && (
+                            {filterForm.selectedPeriod === 'custom' && (
                                 <Row className="g-3">
                                     <Col sm={6}>
                                         <div className="form-group">
@@ -1116,8 +1233,9 @@ const Spending = () => {
                                             <input
                                                 type="date"
                                                 id="customStartDate"
-                                                value={customStartDate}
-                                                onChange={(e) => setCustomStartDate(e.target.value)}
+                                                name="customStartDate"
+                                                value={filterForm.customStartDate}
+                                                onChange={handleFilterChange}
                                                 className="form-control"
                                             />
                                         </div>
@@ -1128,8 +1246,9 @@ const Spending = () => {
                                             <input
                                                 type="date"
                                                 id="customEndDate"
-                                                value={customEndDate}
-                                                onChange={(e) => setCustomEndDate(e.target.value)}
+                                                name="customEndDate"
+                                                value={filterForm.customEndDate}
+                                                onChange={handleFilterChange}
                                                 className="form-control"
                                             />
                                         </div>
@@ -1141,8 +1260,9 @@ const Spending = () => {
                                 <label htmlFor="sortOption">Sort By</label>
                                 <select
                                     id="sortOption"
-                                    value={sortOption}
-                                    onChange={(e) => setSortOption(e.target.value)}
+                                    name="sortOption"
+                                    value={filterForm.sortOption}
+                                    onChange={handleFilterChange}
                                     className="form-control"
                                 >
                                     <option value="dateDesc">Most Recent</option>
@@ -1157,7 +1277,7 @@ const Spending = () => {
                             <div className="popup-actions">
                                 <button
                                     type="button"
-                                    onClick={() => setFilterPopupVisible(false)}
+                                    onClick={applyFilters}
                                     className="btn-eco-primary"
                                 >
                                     Apply Filters
@@ -1165,10 +1285,7 @@ const Spending = () => {
                                 <button
                                     type="button"
                                     onClick={() => {
-                                        setFilterType('');
-                                        setFilterCategory('');
-                                        setSelectedPeriod('currentMonth');
-                                        setSortOption('dateDesc');
+                                        resetFilters();
                                         setFilterPopupVisible(false);
                                     }}
                                     className="btn-eco-secondary"

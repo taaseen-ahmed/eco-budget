@@ -40,14 +40,27 @@ const CarbonFootprint = () => {
     const [benchmarks, setBenchmarks] = useState([]);
 
     // State - UI controls
-    const [comparePreviousMonth, setComparePreviousMonth] = useState(false);
     const [loadingRecommendations, setLoadingRecommendations] = useState(false);
     const [loadingBenchmarks, setLoadingBenchmarks] = useState(false);
-    const [selectedCategory, setSelectedCategory] = useState('');
-    const [selectedPeriod, setSelectedPeriod] = useState('currentMonth');
-    const [customStartDate, setCustomStartDate] = useState('');
-    const [customEndDate, setCustomEndDate] = useState('');
     const [isFilterPopupVisible, setFilterPopupVisible] = useState(false);
+
+    // State - Active filters (currently applied)
+    const [activeFilters, setActiveFilters] = useState({
+        selectedCategory: '',
+        selectedPeriod: 'currentMonth',
+        customStartDate: '',
+        customEndDate: '',
+        comparePreviousMonth: false
+    });
+
+    // State - Filter form (temporary until applied)
+    const [filterForm, setFilterForm] = useState({
+        selectedCategory: '',
+        selectedPeriod: 'currentMonth',
+        customStartDate: '',
+        customEndDate: '',
+        comparePreviousMonth: false
+    });
 
     /**
      * Fetches user's transactions from API
@@ -120,17 +133,73 @@ const CarbonFootprint = () => {
     }, [API_ENDPOINTS.benchmarks]);
 
     /**
+     * Handles changes to the filter form fields
+     * @param {Object} e - Change event
+     */
+    const handleFilterChange = (e) => {
+        const { name, value } = e.target;
+        setFilterForm(prev => ({
+            ...prev,
+            [name]: value
+        }));
+    };
+
+    /**
+     * Toggles the comparison with previous month checkbox
+     * @param {boolean} checked - New checked state
+     */
+    const handleComparisonToggle = (checked) => {
+        setFilterForm(prev => ({
+            ...prev,
+            comparePreviousMonth: checked
+        }));
+    };
+
+    /**
+     * Applies the current filter form values to active filters
+     */
+    const applyFilters = () => {
+        setActiveFilters({...filterForm});
+        setFilterPopupVisible(false);
+    };
+
+    /**
+     * Resets all filters to default values
+     */
+    const resetFilters = () => {
+        const defaultFilters = {
+            selectedCategory: '',
+            selectedPeriod: 'currentMonth',
+            customStartDate: '',
+            customEndDate: '',
+            comparePreviousMonth: false
+        };
+
+        setFilterForm(defaultFilters);
+        setActiveFilters(defaultFilters);
+    };
+
+    /**
+     * Opens the filter popup and initializes the filter form with current values
+     */
+    const openFilterPopup = () => {
+        setFilterForm({...activeFilters});
+        setFilterPopupVisible(true);
+    };
+
+    /**
      * Filters transactions based on selected period and category
      * @param {Array} transactions - Transactions to filter
-     * @param {string} period - Time period to filter by
+     * @param {Object} filters - Filter settings to apply
      * @returns {Array} Filtered transactions
      */
-    const filterTransactions = useCallback((transactions, period) => {
+    const filterTransactions = useCallback((transactions, filters) => {
+        const { selectedCategory, selectedPeriod, customStartDate, customEndDate } = filters;
         const currentDate = new Date();
         let startDate, endDate;
 
         // Determine date range based on selected period
-        switch (period) {
+        switch (selectedPeriod) {
             case 'currentMonth':
                 startDate = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
                 endDate = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0);
@@ -159,15 +228,15 @@ const CarbonFootprint = () => {
             const isWithinCategory = selectedCategory ? transaction.category?.name === selectedCategory : true;
             return isWithinDateRange && isWithinCategory && transaction.type !== 'Income';
         });
-    }, [selectedCategory, customStartDate, customEndDate]);
+    }, []);
 
     /**
      * Calculates the total carbon footprint for the selected period
      * @param {Array} transactions - Transactions to calculate from
-     * @param {string} period - Time period to calculate for
+     * @param {Object} filters - Filter settings to apply
      */
-    const calculateTotalCarbonFootprint = useCallback((transactions, period) => {
-        const filteredTransactions = filterTransactions(transactions, period);
+    const calculateTotalCarbonFootprint = useCallback((transactions, filters) => {
+        const filteredTransactions = filterTransactions(transactions, filters);
         const total = filteredTransactions.reduce((sum, transaction) => {
             return sum + (transaction.carbonFootprint || 0);
         }, 0);
@@ -177,11 +246,14 @@ const CarbonFootprint = () => {
     /**
      * Calculates cumulative carbon footprint data for charts
      * @param {Array} transactions - Transactions to calculate from
-     * @param {string} period - Time period to calculate for
+     * @param {Object} filters - Filter settings to apply
+     * @param {string} period - Specific period override (optional)
      * @param {Function} setData - State setter function for the calculated data
      */
-    const calculateCumulativeData = useCallback((transactions, period, setData) => {
-        const filteredTransactions = filterTransactions(transactions, period);
+    const calculateCumulativeData = useCallback((transactions, filters, period, setData) => {
+        // If period is provided, use it to override the filters' period
+        const filterToUse = period ? {...filters, selectedPeriod: period} : filters;
+        const filteredTransactions = filterTransactions(transactions, filterToUse);
 
         // Sort by date and calculate cumulative values
         const sortedTransactions = [...filteredTransactions].sort(
@@ -207,7 +279,7 @@ const CarbonFootprint = () => {
      * @returns {string} Period name
      */
     const getPeriodName = () => {
-        switch (selectedPeriod) {
+        switch (activeFilters.selectedPeriod) {
             case 'currentMonth': return 'Current Month';
             case 'lastMonth': return 'Last Month';
             case 'last3Months': return 'Last 3 Months';
@@ -219,11 +291,12 @@ const CarbonFootprint = () => {
     /**
      * Calculates the carbon footprint distribution by category
      * @param {Array} transactions - Transactions to analyze
+     * @param {Object} filters - Filter settings to apply
      * @returns {Object} Chart data for pie chart
      */
-    const calculateCarbonFootprintDistribution = (transactions) => {
+    const calculateCarbonFootprintDistribution = (transactions, filters) => {
         // Filter and group by category
-        const filteredTransactions = filterTransactions(transactions, selectedPeriod)
+        const filteredTransactions = filterTransactions(transactions, filters)
             .filter(transaction => transaction.type !== 'Income');
 
         const categoryTotals = filteredTransactions.reduce((acc, transaction) => {
@@ -271,39 +344,39 @@ const CarbonFootprint = () => {
 
     // Process data when dependencies change
     useEffect(() => {
-        // Calculate carbon footprint data based on current filters
-        calculateTotalCarbonFootprint(transactions, selectedPeriod);
-        calculateCumulativeData(transactions, selectedPeriod, setCumulativeData);
+        // Calculate carbon footprint data based on active filters
+        calculateTotalCarbonFootprint(transactions, activeFilters);
+        calculateCumulativeData(transactions, activeFilters, null, setCumulativeData);
 
         // For comparison feature, calculate previous month data when needed
-        if (selectedPeriod === 'currentMonth') {
-            calculateCumulativeData(transactions, 'lastMonth', setPreviousMonthData);
+        if (activeFilters.selectedPeriod === 'currentMonth' && activeFilters.comparePreviousMonth) {
+            calculateCumulativeData(transactions, activeFilters, 'lastMonth', setPreviousMonthData);
+        } else {
+            // Clear previous month data if not comparing
+            setPreviousMonthData([]);
         }
     }, [
         transactions,
-        selectedCategory,
-        selectedPeriod,
-        customStartDate,
-        customEndDate,
+        activeFilters,
         calculateTotalCarbonFootprint,
         calculateCumulativeData
     ]);
 
     // Prepare chart data
-    const carbonFootprintDistributionData = calculateCarbonFootprintDistribution(transactions);
+    const carbonFootprintDistributionData = calculateCarbonFootprintDistribution(transactions, activeFilters);
 
     // Chart configurations
     const chartConfig = {
         // Line chart for cumulative carbon footprint
         line: {
             data: {
-                labels: comparePreviousMonth
+                labels: activeFilters.comparePreviousMonth
                     ? Array.from({ length: 31 }, (_, i) => i + 1)
                     : cumulativeData.map(data => data.date),
                 datasets: [
                     {
                         label: 'Current Month Carbon Footprint (kg CO2)',
-                        data: comparePreviousMonth
+                        data: activeFilters.comparePreviousMonth
                             ? cumulativeData.map(data => ({
                                 x: data.day,
                                 y: data.cumulativeSum,
@@ -318,7 +391,7 @@ const CarbonFootprint = () => {
                         backgroundColor: 'rgba(75,192,192,0.4)',
                         borderColor: 'rgba(75,192,192,1)',
                     },
-                    comparePreviousMonth && {
+                    activeFilters.comparePreviousMonth && {
                         label: 'Previous Month Carbon Footprint (kg CO2)',
                         data: previousMonthData.map(data => ({
                             x: data.day,
@@ -349,7 +422,7 @@ const CarbonFootprint = () => {
                     }
                 },
                 scales: {
-                    x: comparePreviousMonth ? {
+                    x: activeFilters.comparePreviousMonth ? {
                         type: 'linear',
                         title: {
                             display: true,
@@ -437,7 +510,7 @@ const CarbonFootprint = () => {
                         </p>
                     </div>
                     <button
-                        onClick={() => setFilterPopupVisible(true)}
+                        onClick={openFilterPopup}
                         className="btn-eco-secondary"
                     >
                         <FaFilter className="me-2" /> Filter Data
@@ -601,11 +674,12 @@ const CarbonFootprint = () => {
                     <div className="popup-body">
                         <form className="filter-form">
                             <div className="form-group">
-                                <label htmlFor="filterCategory">Category</label>
+                                <label htmlFor="selectedCategory">Category</label>
                                 <select
-                                    id="filterCategory"
-                                    value={selectedCategory}
-                                    onChange={(e) => setSelectedCategory(e.target.value)}
+                                    id="selectedCategory"
+                                    name="selectedCategory"
+                                    value={filterForm.selectedCategory}
+                                    onChange={handleFilterChange}
                                     className="form-control"
                                 >
                                     <option value="">All Categories</option>
@@ -621,8 +695,9 @@ const CarbonFootprint = () => {
                                 <label htmlFor="selectedPeriod">Time Period</label>
                                 <select
                                     id="selectedPeriod"
-                                    value={selectedPeriod}
-                                    onChange={(e) => setSelectedPeriod(e.target.value)}
+                                    name="selectedPeriod"
+                                    value={filterForm.selectedPeriod}
+                                    onChange={handleFilterChange}
                                     className="form-control"
                                 >
                                     <option value="currentMonth">Current Month</option>
@@ -632,7 +707,7 @@ const CarbonFootprint = () => {
                                 </select>
                             </div>
 
-                            {selectedPeriod === 'custom' && (
+                            {filterForm.selectedPeriod === 'custom' && (
                                 <Row className="g-3">
                                     <Col sm={6}>
                                         <div className="form-group">
@@ -640,8 +715,9 @@ const CarbonFootprint = () => {
                                             <input
                                                 type="date"
                                                 id="customStartDate"
-                                                value={customStartDate}
-                                                onChange={(e) => setCustomStartDate(e.target.value)}
+                                                name="customStartDate"
+                                                value={filterForm.customStartDate}
+                                                onChange={handleFilterChange}
                                                 className="form-control"
                                             />
                                         </div>
@@ -652,8 +728,9 @@ const CarbonFootprint = () => {
                                             <input
                                                 type="date"
                                                 id="customEndDate"
-                                                value={customEndDate}
-                                                onChange={(e) => setCustomEndDate(e.target.value)}
+                                                name="customEndDate"
+                                                value={filterForm.customEndDate}
+                                                onChange={handleFilterChange}
                                                 className="form-control"
                                             />
                                         </div>
@@ -661,14 +738,14 @@ const CarbonFootprint = () => {
                                 </Row>
                             )}
 
-                            {selectedPeriod === 'currentMonth' && (
+                            {filterForm.selectedPeriod === 'currentMonth' && (
                                 <div className="form-group">
                                     <div className="comparison-toggle">
                                         <label className="toggle-switch">
                                             <input
                                                 type="checkbox"
-                                                checked={comparePreviousMonth}
-                                                onChange={() => setComparePreviousMonth(!comparePreviousMonth)}
+                                                checked={filterForm.comparePreviousMonth}
+                                                onChange={(e) => handleComparisonToggle(e.target.checked)}
                                             />
                                             <span className="toggle-slider"></span>
                                         </label>
@@ -680,7 +757,7 @@ const CarbonFootprint = () => {
                             <div className="popup-actions">
                                 <button
                                     type="button"
-                                    onClick={() => setFilterPopupVisible(false)}
+                                    onClick={applyFilters}
                                     className="btn-eco-primary"
                                 >
                                     Apply Filters
@@ -688,9 +765,7 @@ const CarbonFootprint = () => {
                                 <button
                                     type="button"
                                     onClick={() => {
-                                        setSelectedCategory('');
-                                        setSelectedPeriod('currentMonth');
-                                        setComparePreviousMonth(false);
+                                        resetFilters();
                                         setFilterPopupVisible(false);
                                     }}
                                     className="btn-eco-secondary"

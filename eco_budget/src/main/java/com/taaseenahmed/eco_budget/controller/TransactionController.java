@@ -22,7 +22,6 @@ public class TransactionController {
     // Endpoint to create a new transaction for the authenticated user.
     @PostMapping
     public ResponseEntity<TransactionDTO> createTransaction(@RequestBody TransactionDTO transactionDTO, Principal principal) {
-        // Delegate business logic to service and create a new transaction
         TransactionDTO response = transactionService.createTransaction(transactionDTO, principal.getName());
         String source = response.getIsChatGPTDerivedCarbonFootprint() ? "ChatGPT" : "default category multiplier";
         return ResponseEntity.status(HttpStatus.CREATED)
